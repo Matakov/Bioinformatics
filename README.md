@@ -68,4 +68,12 @@ Post installation steps:
 	To see if it installed correctly:
 	3) $ nvcc --version
 
+Installation of seqan dependencies
+
+1) $ sudo apt install zlib1g-dev libbz2-dev
+
+Installation of seqan
+
+1) $ sudo apt install seqan-dev
+
 
