@@ -1,6 +1,6 @@
 #include "main.h"
 #include "utility.h"
-
+#include "SW.h"
 
 int main(int argc, char** argv)
 {
@@ -30,8 +30,19 @@ int main(int argc, char** argv)
 	std::string check;
 	mapToString(mapData, check);
 
-	std::cout<<check<<std::endl;
+	//std::cout<<check<<std::endl;
 
+	int N = 1<<20;
+  	float *x, *y;
+	calculate(x,y,N);
+
+	char* mem;
+	allocateMemory(check,mem);
+	for(int i=0;i<check.length();++i)
+	{
+		std::cout<<mem[i];
+	}
+	releaseMemory(mem);
 	return 0;
 }
 

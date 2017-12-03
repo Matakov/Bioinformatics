@@ -34,7 +34,7 @@ Output parameters: read file in a map
 */
 void importFile(std::string filename, std::map<std::string,std::string>& mapData)
 {
-	bool Switch = false;
+	//bool Switch = false;
 	std::string line;
 	std::ifstream myfile (filename);
 	std::vector<std::string> keys;
@@ -91,9 +91,9 @@ concatenace all map values in a string
 */
 void mapToString( const std::map<std::string,std::string>& myMap, std::string& vector)
 {
-	for (auto const& x : myMap)
+	for (std::pair<std::string, std::string> element : myMap)
 	{
-		vector+=x.second;
+		vector+=element.second;
 	}
 	return;
 }
