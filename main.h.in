@@ -1,6 +1,6 @@
 // the configured options and settings for Tutorial
-#define Bioinformatics_VERSION_MAJOR 1
-#define Bioinformatics_VERSION_MINOR 0
+#define Bioinformatics_VERSION_MAJOR @Tutorial_VERSION_MAJOR@
+#define Bioinformatics_VERSION_MINOR @Tutorial_VERSION_MINOR@
 
 #include<iostream>
 #include<iomanip>
