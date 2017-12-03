@@ -4,7 +4,13 @@ cmake_minimum_required (VERSION 2.6)
 project (Bioinformatics)
 
 # packages                                                                                                                                                                                                 
-find_package(CUDA)
+find_package(CUDA REQUIRED)
+
+# set so a c++11 compiler is used
+set (CMAKE_CXX_STANDARD 11)
+
+# nvcc flags                                                                                                                                                                                               
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_20,code=sm_20)
 
 # The version number.
 set (Tutorial_VERSION_MAJOR 1)
@@ -23,8 +29,7 @@ configure_file (
 # so that we will find TutorialConfig.h
 include_directories("${PROJECT_BINARY_DIR}")
 
-# set so a c++11 compiler is used
-set (CMAKE_CXX_STANDARD 11)
+cuda_compile(HELPER_O SW.cu)
 
 # add the executable
-add_executable(program main.cpp utility.cpp)
+cuda_add_executable(program main.cpp utility.cpp ${HELPER_O})
