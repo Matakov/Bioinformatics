@@ -1,13 +1,25 @@
 #include "main.h"
 #include "utility.h"
 #include "SW.h"
+#include "argparse.hpp"
+#include <string>
 
 int main(int argc, char** argv)
 {
+	ArgumentParser parser;
 	
-	if(argc!=2)
+	parser.addArgument("-f1", "--file1", 1, true);
+	parser.addArgument("-f2", "--file2", 1, true);
+	parser.addArgument("-m","--mode")
+	parser.addArgument("-h", "--help");
+	parser.addFinalArgument("-o","--output");
+	
+	parser.parse(argc, argv);
+	
+	string helper = parser.retrieve<string>("h");
+	if(!helper.empty())
 	{
-		std::cout<<"Program should be called like this: program input_file"<<std::endl;
+		std::cout<<"Program should be called like this: $ program -f1 [input_file1] -f2 [input_file2]\nOptional arguments are -m [mode], -o [output] and -h as helper"<<std::endl;
 		return -1;	
 	}
 	
