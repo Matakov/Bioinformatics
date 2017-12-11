@@ -4,24 +4,18 @@
 #include "argparse.hpp"
 #include <string>
 
-int main(int argc, char** argv)
+int main(int argc, const char** argv)
 {
 	ArgumentParser parser;
 	
-	parser.addArgument("-f1", "--file1", 1, true);
-	parser.addArgument("-f2", "--file2", 1, true);
-	parser.addArgument("-m","--mode")
-	parser.addArgument("-h", "--help");
-	parser.addFinalArgument("-o","--output");
+	parser.addArgument("-f", "--files", 2, true);
+	parser.addArgument("-m", "--mode");
+	parser.addArgument("-o", "--output", true);
+	parser.addFinalArgument("output");
 	
 	parser.parse(argc, argv);
 	
-	string helper = parser.retrieve<string>("h");
-	if(!helper.empty())
-	{
-		std::cout<<"Program should be called like this: $ program -f1 [input_file1] -f2 [input_file2]\nOptional arguments are -m [mode], -o [output] and -h as helper"<<std::endl;
-		return -1;	
-	}
+//	std::string helper = parser.retrieve<std::string>("help"); Usage example
 	
 	std::vector<std::string> data;
 	std::map<std::string,std::string> mapData;
@@ -43,7 +37,7 @@ int main(int argc, char** argv)
 	mapToString(mapData, check);
 
 	//std::cout<<check<<std::endl;
-
+/*
 	int N = 1<<20;
   	float *x, *y;
 	calculate(x,y,N);
@@ -55,6 +49,7 @@ int main(int argc, char** argv)
 		std::cout<<mem[i];
 	}
 	releaseMemory(mem);
+*/
 	return 0;
 }
 

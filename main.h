@@ -19,9 +19,9 @@
 
 
 //seqan
-#include <seqan/file.h>
-#include <seqan/sequence.h>
+//#include <seqan/file.h>
+//#include <seqan/sequence.h>
 
 //for importing sequences
-#include <seqan/bam_io.h>
+//#include <seqan/bam_io.h>
 

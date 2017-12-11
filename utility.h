@@ -14,11 +14,11 @@
 #include<string>
 
 //seqan
-#include <seqan/file.h>
-#include <seqan/sequence.h>
+//#include <seqan/file.h>
+//#include <seqan/sequence.h>
 
 //for importing sequences
-#include <seqan/bam_io.h>
+//#include <seqan/bam_io.h>
 
 void importFile(std::string, std::vector<std::string>&);
 void importFile(std::string, std::map<std::string,std::string>&);
