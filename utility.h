@@ -32,3 +32,5 @@ double maxFun(double , double ,double);
 double sim(char , char );
 
 void NeedlemanWunsch(std::string& , std::string& , double , double (*)(char,char), double& ,double& ,double& , double& ,double& ,std::vector<char>& );
+
+void printAlignment(std::string const& ,std::string const& ,std::vector<char> const& );

@@ -57,12 +57,12 @@ int main(int argc, const char** argv)
 	std::string b = "ATAT";
 	double i,j,k,l,s;
 	std::vector<char> vec;
-	NeedlemanWunsch(b,a,2,sim,i,j,k,l,s,vec);
-	std::cout<<a<<" : "<<b<<" "<<i<<" "<<j<<" "<<k<<" "<<l<<" S: "<<s<<std::endl;
+	NeedlemanWunsch(b,b,2,sim,i,j,k,l,s,vec);
+	//std::cout<<a<<" : "<<b<<" "<<i<<" "<<j<<" "<<k<<" "<<l<<" S: "<<s<<std::endl;
 	std::cout<<"Path: ";
 	for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
 	std::cout<<std::endl;
-	
+	printAlignment(b,a,vec);
 	return 0;
 }
 

@@ -187,6 +187,7 @@ void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*
 			if (H[i][j]==h)	M[i][j]=pa;
 		}
 	}
+	/*
 	//print H
 	std::cout<<"H: "<<std::endl;
 	for(int i=0;i<m;i++)
@@ -252,6 +253,7 @@ void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*
 		}
 		std::cout<<std::endl;
 	}
+	*/
 	//Reconstrucion
 	int i=m-1;
 	int j=n-1;
@@ -287,3 +289,44 @@ void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*
 	pe=p;
 	return;
 }
+
+void printAlignment(std::string const& s1,std::string const& s2,std::vector<char> const& vec)
+{
+	char pi = 'i';//double pi = 3; //insert
+	char pd = 'd';//double pd = 2; //delete
+	char pa = 'm';//double pa = 1; //match - mismatch
+	char ps = 'e';//double ps = 4;
+
+	std::string ps1="";
+	std::string ps2="";
+	int c1=0;
+	int c2=0;
+	for(int i=0;i<vec.size();i++)
+	{
+		//std::cout<<i<<" "<<vec[i]<<" "<<s1[i]<<" "<<s2[i]<<std::endl;
+		if(vec[i]=='i')
+		{
+			ps2+=s2[c2];
+			ps1+='-';
+			c2++;
+		}
+		if(vec[i]=='d')
+		{
+			ps2+='-';
+			ps1+=s1[c1];
+			c1++;		
+		}
+		if(vec[i]=='m')
+		{
+			ps1+=s1[c1];
+			ps2+=s2[c2];
+			c1++;
+			c2++;
+		}
+	}
+	
+	std::cout<<"Alignment: "<<std::endl;
+	std::cout<<ps2<<"\n"<<ps1<<std::endl;
+	return;
+}
+	
