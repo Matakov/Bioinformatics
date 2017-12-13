@@ -56,8 +56,8 @@ int main(int argc, const char** argv)
 	std::string a = "ATATTA";
 	std::string b = "ATAT";
 	double i,j,k,l,s;
-	std::vector<double> vec;
-	NeedlemanWunsch(a,b,2,sim,i,j,k,l,s,vec);
+	std::vector<char> vec;
+	NeedlemanWunsch(b,a,2,sim,i,j,k,l,s,vec);
 	std::cout<<a<<" : "<<b<<" "<<i<<" "<<j<<" "<<k<<" "<<l<<" S: "<<s<<std::endl;
 	std::cout<<"Path: ";
 	for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";

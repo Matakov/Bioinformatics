@@ -125,23 +125,23 @@ Authors: Franjo Matkovic
 
 concatenace all map values in a string
 */
-void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<double>& pe)
+void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
 {
 	//initialization
 	int m=s1.length()+1;
 	int n=s2.length()+1;
-	std::cout<<"Lengths: "<<m-1<<" "<<n-1<<std::endl;
+	//std::cout<<"Lengths: "<<m-1<<" "<<n-1<<std::endl;
 	//opening and closing opening
 	double d=penalty;
 	double e=penalty;
 	double en,f,h;
 	//pi = 3, pd = 2, pa = 1, ps = 4;
-	double pi = 3;
-	double pd = 2;
-	double pa = 1;
-	double ps = 4;
+	char pi = 'i';//double pi = 3; //insert
+	char pd = 'd';//double pd = 2; //delete
+	char pa = 'm';//double pa = 1; //match - mismatch
+	char ps = 'e';//double ps = 4;
 	double H[m][n];
-	double M[m][n];
+	char M[m][n];//double M[m][n];
 	double Gi[m][n];
 	double Gd[m][n];
 	double E[m][n];
@@ -151,7 +151,7 @@ void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*
 	//fill elements with zeros
 	std::fill(Gi[0], Gi[0] + m * n, 0);
 	std::fill(Gd[0], Gd[0] + m * n, 0);
-	std::fill(M[0], M[0] + m * n, 0);
+	//std::fill(M[0], M[0] + m * n, 0);
 	
 	for(int i=1;i<m;i++)
 	{
@@ -165,8 +165,7 @@ void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*
 		M[0][i]=pi;
 		F[0][i]= -1.0/0.0;//-inf
 	}
-
-	M[0][0]=ps;	
+	M[0][0]='e';//M[0][0]=ps;	
 	H[0][0]=0;
 
 	for(int i=1;i<m;i++)
@@ -256,18 +255,18 @@ void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*
 	//Reconstrucion
 	int i=m-1;
 	int j=n-1;
-	std::vector<double> p;
+	std::vector<char> p;
 	while(M[i][j]!=ps)
 	{
 		if(M[i][j]==pi)
 		{
-			p.insert(p.begin(),Gi[i][j]+1);
-			j = j - Gi[i][j] - 1;
+			p.insert(p.begin(),M[i][j]);//Gi[i][j]+1);
+			j = j - 1;  //- Gi[i][j] - 1;
 		}
 		if(M[i][j]==pd)
 		{
-			p.insert(p.begin(),Gd[i][j]+1);
-			i = i - Gd[i][j] - 1;
+			p.insert(p.begin(),M[i][j]);//Gd[i][j]+1);
+			i = i - 1; //- Gd[i][j] - 1;
 		}
 		if(M[i][j]==pa)
 		{
