@@ -26,3 +26,9 @@ void importFile(std::string, std::map<std::string,std::string>&);
 void printVector(std::vector<std::string>&);
 
 void mapToString( const std::map<std::string,std::string>&, std::string&);
+
+double maxFun(double , double ,double);
+
+double sim(char , char );
+
+void NeedlemanWunsch(std::string& , std::string& , double , double (*)(char,char), double& ,double& ,double& , double& ,double& ,std::vector<double>& );
