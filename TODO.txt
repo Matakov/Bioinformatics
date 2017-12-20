@@ -1,4 +1,9 @@
+﻿Program koji testira nas program i library
+
 Wavefront
 Metoda dopunjavanja elementata wavefront metode s kontrolom rubnih procjepa prilagođena ekrstrakciji zadnjih redaka matrica H i F
 Algoritam dinamičkog odbacivanja elementata prilagođen wavefront metodi
 Ukkonenov algoritam prilagođen wavefront metodi
+
+
+
