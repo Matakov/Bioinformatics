@@ -34,3 +34,9 @@ double sim(char , char );
 void NeedlemanWunsch(std::string& , std::string& , double , double (*)(char,char), double& ,double& ,double& , double& ,double& ,std::vector<char>& );
 
 void printAlignment(std::string const& ,std::string const& ,std::vector<char> const& );
+
+void NWG(std::string& , std::string& , double , double (*)(char,char), double& ,int ,int ,int ,int ,double& ,double& , double& ,double& ,std::vector<char>& );
+
+void NWS(std::string& , std::string& , double , double (*)(char,char), double& );
+
+void NWH(std::string& , std::string& , double , double (*sim)(char,char), int ,int , double* , double* );

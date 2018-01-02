@@ -6,9 +6,10 @@ void add(int n, float *x, float *y)
 {
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   int stride = blockDim.x * gridDim.x;
-  for (int i = index; i < n; i += stride)
-    y[i] = x[i] + y[i];
+  for (int i = index; i < n; i += stride) y[i] = x[i] + y[i];
 }
+
+
 extern "C" void calculate(float *x,float *y, int N)
 {
   // Allocate Unified Memory -- accessible from CPU or GPU
@@ -51,8 +52,9 @@ Parameters:
 -Function to allocate unified memory
  and copy to unified memory
 */
-extern "C" void allocateMemory(std::string& x, char* memory)
+extern "C" char* allocateMemory(std::string& x)
 {
+	char* memory;
 	const char *cstr = x.c_str();
 	cudaMallocManaged(&memory, x.length()*(sizeof(char)+1));
 	//x.copy( memory, x.length() );
@@ -60,10 +62,10 @@ extern "C" void allocateMemory(std::string& x, char* memory)
 	strcpy(memory, cstr);	
 	memory[x.length()]='\0';
 	//for(int i=0;i<x.length();++i) std::cout<<cstr[i];
-	std::cout<<"Memory allocated"<<std::endl;
-	for(int i=0;i<x.length();++i) std::cout<<memory[i];
-	std::cout<<std::endl;
-	return;
+	//std::cout<<"Memory allocated"<<std::endl;
+	//for(int i=0;i<x.length();++i) std::cout<<memory[i];
+	//std::cout<<std::endl;
+	return memory;
 }
 
 /*
@@ -77,6 +79,6 @@ Parameters:
 extern "C" void releaseMemory(char* memory)
 {
 	cudaFree(memory);
-	std::cout<<"Memory released"<<std::endl;
+	//std::cout<<"Memory released"<<std::endl;
 	return;
 }

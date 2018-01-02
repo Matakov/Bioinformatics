@@ -39,19 +39,21 @@ int main(int argc, const char** argv)
 
 	//std::cout<<check<<std::endl;
 	*/
-/*
+
 	int N = 1<<20;
   	float *x, *y;
 	calculate(x,y,N);
 
+	std::string check = "Hello World\n";
 	char* mem;
-	allocateMemory(check,mem);
+	mem=allocateMemory(check);
 	for(int i=0;i<check.length();++i)
 	{
 		std::cout<<mem[i];
 	}
 	releaseMemory(mem);
-*/
+
+/*
 	//test NM
 	std::string a = "ATATTA";
 	std::string b = "ATAT";
@@ -63,6 +65,7 @@ int main(int argc, const char** argv)
 	for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
 	std::cout<<std::endl;
 	printAlignment(b,a,vec);
+*/
 	return 0;
 }
 

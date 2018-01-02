@@ -24,6 +24,8 @@ void add(int , float, float );
 
 extern "C" void calculate(float *,float *, int );
 
-extern "C" void allocateMemory(std::string& x, char* memory);
-extern "C" void releaseMemory(char* memory);
+//extern "C" void allocateMemory(std::string& , char* );
+extern "C" char* allocateMemory(std::string& );
+
+extern "C" void releaseMemory(char* );
 
