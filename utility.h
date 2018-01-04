@@ -13,12 +13,6 @@
 #include<iterator>
 #include<string>
 
-//seqan
-//#include <seqan/file.h>
-//#include <seqan/sequence.h>
-
-//for importing sequences
-//#include <seqan/bam_io.h>
 
 void importFile(std::string, std::vector<std::string>&);
 void importFile(std::string, std::map<std::string,std::string>&);
@@ -40,3 +34,5 @@ void NWG(std::string& , std::string& , double , double (*)(char,char), double& ,
 void NWS(std::string& , std::string& , double , double (*)(char,char), double& );
 
 void NWH(std::string& , std::string& , double , double (*sim)(char,char), int ,int , double* , double* );
+
+void padding(std::string&, std::string&, int, int);

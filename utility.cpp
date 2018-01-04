@@ -314,6 +314,78 @@ void printAlignment(std::string const& s1,std::string const& s2,std::vector<char
 	
 
 /*
+Author: Dario Sitnik
+helper function for finding neutral element sim(x,y)<=0
+*/
+
+char findPadChar(char a, char b, char c)
+{
+    std::string all("ATCG");
+    all.erase(std::remove(all.begin(), all.end(), a), all.end());
+    all.erase(std::remove(all.begin(), all.end(), b), all.end());
+    if (c == 'N')
+    {
+        return (all[0]);  
+    }
+    else
+    {
+        all.erase(std::remove(all.begin(), all.end(), c), all.end());
+        return (all[0]);  
+    }
+    
+}
+
+
+/*
+Author: Dario Sitnik
+sequences padding function to match block dimensions
+*/
+void padding(std::string& a, std::string& b, int M, int N)
+{
+    if (a.length() % M != 0)
+        {
+            if (b.length() % N != 0)
+            {   
+                char pa = findPadChar(a.back(),b.back(), 'N');
+                char pb = findPadChar(a.back(),b.back(), pa);
+                while (a.length() % M != 0)
+                {
+                    a += pa;
+                }
+                while (b.length() % N != 0)
+                {
+                    b += pb;
+                }           
+            }
+            else 
+            {
+        
+                char pa = findPadChar(a.back(),b.back(), 'N');
+                while (a.length() % M != 0)
+                {
+                    a += pa;
+                }           
+            }
+        }
+    else
+    {
+        if (b.length() % N != 0)
+        {
+        std::cout<<a.back()<<" "<<b.back()<<std::endl;
+            char pb = findPadChar(a.back(),b.back(), 'N');
+        std::cout<<pb<<std::endl;
+            while (b.length() % N != 0)
+                {
+                    b += pb;
+                }
+        }
+    }
+}
+
+
+
+
+/*
 Authors: Franjo Matkovic
 
 Input parameters:
