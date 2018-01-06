@@ -12,6 +12,8 @@
 #include<time.h>
 #include<iterator>
 #include<string>
+#include <cuda.h>
+//#include "cuPrintf.cu"
 
 //seqan
 //#include <seqan/file.h>
@@ -26,6 +28,11 @@ extern "C" void calculate(float *,float *, int );
 
 //extern "C" void allocateMemory(std::string& , char* );
 extern "C" char* allocateMemory(std::string& );
+extern "C" float* allocateMatrixMemory(const std::string& ,const std::string& );
 
 extern "C" void releaseMemory(char* );
 
+//void initializeNWS(float** , double, float, float, float);
+extern "C" void initialize(float** , double , float, float, float );
+
+extern "C" void NWS(char* , char*, float* );

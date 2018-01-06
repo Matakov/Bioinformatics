@@ -72,7 +72,30 @@ extern "C" char* allocateMemory(std::string& x)
 Authors: Franjo Matkovic
 
 Parameters:
-	input: char array
+	input: c++ string
+	output: char array
+-Function to allocate unified memory
+ and copy to unified memory
+*/
+extern "C" float* allocateMatrixMemory(const std::string& x,const std::string& y)
+{
+	float* memory;
+	//cudaMallocManaged(&memory, (x.length()+1)*(y.length()+1)*(sizeof(float)));
+	//x.copy( memory, x.length() );
+	//for(int i=0;i<x.length();++i) memory[i]=cstr[i];
+  	cudaMalloc((float **)&memory, (x.length()+1) * (y.length()+1) * sizeof(float));	
+	//for(int i=0;i<x.length();++i) std::cout<<cstr[i];
+	//std::cout<<"Memory allocated"<<std::endl;
+	//for(int i=0;i<x.length();++i) std::cout<<memory[i];
+	//std::cout<<std::endl;
+	return memory;
+}
+
+/*
+Authors: Franjo Matkovic
+
+Parameters:
+	input: array pointer
 	output: -
 -Function to release unified memory
 */
@@ -82,3 +105,62 @@ extern "C" void releaseMemory(char* memory)
 	//std::cout<<"Memory released"<<std::endl;
 	return;
 }
+
+/*
+Authors: Franjo Matkovic
+
+Parameters:
+	input: array pointer
+	output: -
+-Function to initialize memory array for calculating Needlmen-Wunsch
+*/
+__global__ void initializeNWS(float** memory, double penalty, float M, float N, float n)
+{
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	int stride = blockDim.x * gridDim.x;
+	double d=penalty;
+	double e=penalty;
+	//int idx,c;
+	for (int i = index; i < n; i += stride)
+	{
+		//The following max-min is to avoid if branching
+		//idx = max( i, 0);
+        	//idx = min( (float)idx, M);
+		//memory[idx] = -(d+e*(idx-1));
+		//c = (int)i%(int)N;
+		//c = (c>>31) – (-c>>31); //result is 0 if c in a row before is zero ,1 if positive ,-1 if negative
+		//c = 1 - c;
+		//c = max(c,-1)+min(c,1s);
+		
+		if(i<M || (int)i%(int)N)
+		{
+			*memory[i] = -(d+e*(i-1));
+		}
+		else
+		{
+			*memory[i] = 0;
+		}
+		//printf("Hello thread %d, f=%f\n", threadIdx.x, memory[i]);
+	}
+	memory[0]=0;
+	return;
+}
+
+extern "C" void initialize(float** memory, double penalty, float M, float N, float n)
+{
+	printf("Time to initialize\n");
+	printf("Memory size %f\n",n);
+	printf("Memory address %p\n",(void *) memory);
+	printf("Memory address %p\n",(void **) memory);
+	initializeNWS<<<4,16>>>(memory,penalty,M,N,n);
+	return;
+}
+
+
+
+extern "C" void NWS(char* x, char*y, float* memory)
+{
+	//int numberOfKernels = gridDim.x;
+	
+	return;
+} 
