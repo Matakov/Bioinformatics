@@ -74,8 +74,7 @@ Authors: Franjo Matkovic
 Parameters:
 	input: c++ string
 	output: char array
--Function to allocate unified memory
- and copy to unified memory
+-Function to allocate cuda memory
 */
 extern "C" float* allocateMatrixMemory(const std::string& x,const std::string& y)
 {
@@ -88,6 +87,62 @@ extern "C" float* allocateMatrixMemory(const std::string& x,const std::string& y
 	//std::cout<<"Memory allocated"<<std::endl;
 	//for(int i=0;i<x.length();++i) std::cout<<memory[i];
 	//std::cout<<std::endl;
+	return memory;
+}
+
+/*
+Authors: Franjo Matkovic
+
+Parameters:
+	input: c++ string
+	output: char array
+-Function to allocate memory
+*/
+extern "C" float* allocateMatrixMemoryCPU(const std::string& x,const std::string& y)
+{
+	float* memory;
+	//cudaMallocManaged(&memory, (x.length()+1)*(y.length()+1)*(sizeof(float)));
+	//x.copy( memory, x.length() );
+	//for(int i=0;i<x.length();++i) memory[i]=cstr[i];
+  	memory =(float *) malloc((x.length()+1) * (y.length()+1) * sizeof(float));	
+	//for(int i=0;i<x.length();++i) std::cout<<cstr[i];
+	//std::cout<<"Memory allocated"<<std::endl;
+	//for(int i=0;i<x.length();++i) std::cout<<memory[i];
+	//std::cout<<std::endl;
+	return memory;
+}
+
+/*
+Authors: Franjo Matkovic
+
+Parameters:
+*/
+extern "C" float* initializeMemoryMatrixCPU(const std::string& x,const std::string& y, double penalty)
+{
+	double d=penalty;
+	double e=penalty;
+	float* memory = allocateMatrixMemoryCPU( x, y);
+	for(int i=0;i<x.length()+1;i++)
+	{
+		for(int j=0;j<y.length()+1;j++)
+		{
+			//printf("%d,%d\n",i,j);
+			if(i==0)
+			{
+				memory[i*(x.length()+1)+j] = -(d+e*(j-1));
+			}
+			else if(j==0)
+			{	
+				memory[i*(x.length()+1)+j] = -(d+e*(i-1));
+			}
+			else
+			{
+				memory[i*(x.length()+1)+j] = 0;
+			}
+			//printf("%d,%d: %f\n",i,j,memory[i*x.length()+j]);
+		}
+	}
+	memory[0] = 0;
 	return memory;
 }
 

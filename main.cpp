@@ -66,6 +66,39 @@ int main(int argc, const char** argv)
 	std::cout<<std::endl;
 	printAlignment(b,a,vec);
 */
+	float *memory;
+	std::string a = "ATATTA";
+	std::string b = "ATAT";
+	//std::string a = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTA";
+	//std::string b = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAAT";
+	/*
+	memory=allocateMatrixMemory(a,b);
+	std::cout<<"Memory allocated: "<<memory<<std::endl;
+	std::cout<<"Location of a memory: "<<&memory<<std::endl;
+	initialize(&memory,-2,(a.length()+1),(b.length()+1),(int)(a.length()+1) * (b.length()+1));
+	std::cout<<"Memory initialized"<<std::endl;
+	std::cout<<(a.length()+1) * (b.length()+1)<<std::endl;
+	std::cout<<"Memory address: "<<memory<<std::endl;
+	
+	for(int i=0;i<(a.length()+1) * (b.length()+1);i++)
+	{
+		std::cout<<*(memory)<<" ";
+		if(i%(b.length()+1)==0)
+		{
+			std::cout<<std::endl;
+		}
+	}
+	*/
+	memory = initializeMemoryMatrixCPU(a,b,2);
+	for(int i=0;i<(a.length()+1);i++)
+	{
+		for(int j=0;j<(b.length()+1);j++)
+		{
+			std::cout<<memory[i*(a.length()+1)+j]<<" ";
+		}
+		std::cout<<std::endl;
+	}
+	free(memory);
 	return 0;
 }
 

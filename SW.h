@@ -36,3 +36,6 @@ extern "C" void releaseMemory(char* );
 extern "C" void initialize(float** , double , float, float, float );
 
 extern "C" void NWS(char* , char*, float* );
+
+extern "C" float* allocateMatrixMemoryCPU(const std::string& ,const std::string& );
+extern "C" float* initializeMemoryMatrixCPU(const std::string& ,const std::string& , double );
