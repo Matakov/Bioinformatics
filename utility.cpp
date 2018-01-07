@@ -272,6 +272,126 @@ void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*
 	return;
 }
 
+/*
+Author: Dario Sitnik
+
+Smith-Waterman algorithm for sequence alignments
+Input parameters:
+		- string s1
+		- string s2
+		- penalty for gaps
+		- function for evaluating match/mismatch
+Output parameters:
+		- b1 - index for beginning of alignemnt on sequence 1 
+		- e1 - index for end of alignemnt on sequence 1 
+		- b2 - index for beginning of alignemnt on sequence 2 
+		- e2 - index for end of alignemnt on sequence 2 
+		- s  - alignment score
+		- pe  - path for alignment
+*/
+void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
+{
+	//initialization
+	int m=s1.length()+1;
+	int n=s2.length()+1;
+	//std::cout<<"Lengths: "<<m-1<<" "<<n-1<<std::endl;
+	//opening and closing opening
+	double d=penalty;
+	double e=penalty;
+	double en,f,h;
+	//pi = 3, pd = 2, pa = 1, ps = 4;
+	char pi = 'i';//double pi = 3; //insert
+	char pd = 'd';//double pd = 2; //delete
+	char pa = 'm';//double pa = 1; //match - mismatch
+	char ps = 'e';//double ps = 4;
+	double H[m][n];
+	char M[m][n];//double M[m][n];
+	double Gi[m][n];
+	double Gd[m][n];
+	double E[m][n];
+	double F[m][n];
+
+	//solving part
+	//fill elements with zeros
+	std::fill(Gi[0], Gi[0] + m * n, 0);
+	std::fill(Gd[0], Gd[0] + m * n, 0);
+	//std::fill(M[0], M[0] + m * n, 0);
+	
+	for(int i=1;i<m;i++)
+	{
+		H[i][0]=0;
+		M[i][0]=ps;
+		E[i][0]= -1.0/0.0;//-inf
+	}
+	for(int i=1;i<n;i++)
+	{
+		H[0][i]=0;
+		M[0][i]=ps;
+		F[0][i]= -1.0/0.0;//-inf
+	}
+	M[0][0]=ps;	
+	H[0][0]=0;
+	double s = -1.0/0.0
+	double e1 = 0.0
+	double e2 = 0.0
+	for(int i=1;i<m;i++)
+	{
+		for(int j=1;j<n;j++)
+		{
+
+			E[i][j] = std::max(E[i][j-1]-e,H[i][j-1]-d);
+			F[i][j] = std::max(F[i-1][j]-e,H[i-1][j]-d);
+
+			f = std::max(H[i-1][j]-d,F[i-1][j]-e);
+			en = std::max(H[i][j-1]-d,E[i][j-1]-e);
+			h = H[i-1][j-1] + sim(s1[i-1],s2[j-1]);
+			if (f==(F[i-1][j]-e)) Gd[i][j] = Gd[i-1][j]+1;
+			if (f==(E[i][j-1]-e)) Gi[i][j] = Gi[i][j-1]+1;
+			H[i][j]=maxFun(0,f,en,h);
+			if (H[i][j]==0) M[i][j]=ps;
+			if (H[i][j]>s){	
+				s=H[i][j];
+				e1=i;
+				e2=j;
+			}
+		}
+	}
+	
+	//Reconstrucion
+	int i=e1;
+	int j=e2;
+	std::vector<char> p;
+	while(M[i][j]!=ps)
+	{
+		if(M[i][j]==pi)
+		{
+			p.insert(p.begin(),M[i][j]);//Gi[i][j]+1);
+			j = j - 1;  //- Gi[i][j] - 1;
+		}
+		if(M[i][j]==pd)
+		{
+			p.insert(p.begin(),M[i][j]);//Gd[i][j]+1);
+			i = i - 1; //- Gd[i][j] - 1;
+		}
+		if(M[i][j]==pa)
+		{
+			p.insert(p.begin(),M[i][j]);
+			i--;
+			j--;
+		}
+	}
+
+
+	//Data to return
+	b1=0;
+	e1=0;
+	b2=m-1;
+	e2=n-1;
+	s=H[m-1][n-1];
+	pe=p;
+	return;
+}
+
 void printAlignment(std::string const& s1,std::string const& s2,std::vector<char> const& vec)
 {
 	char pi = 'i';//double pi = 3; //insert

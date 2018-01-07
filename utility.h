@@ -36,3 +36,5 @@ void NWS(std::string& , std::string& , double , double (*)(char,char), double& )
 void NWH(std::string& , std::string& , double , double (*sim)(char,char), int ,int , double* , double* );
 
 void padding(std::string&, std::string&, int, int);
+
+void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe):
