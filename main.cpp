@@ -1,6 +1,6 @@
 #include "main.h"
 #include "utility.h"
-#include "SW.h"
+//#include "SW.h"
 #include "argparse.hpp"
 #include <string>
 
@@ -39,7 +39,7 @@ int main(int argc, const char** argv)
 
 	//std::cout<<check<<std::endl;
 	*/
-
+	/*
 	int N = 1<<20;
   	float *x, *y;
 	calculate(x,y,N);
@@ -52,7 +52,7 @@ int main(int argc, const char** argv)
 		std::cout<<mem[i];
 	}
 	releaseMemory(mem);
-
+	*/
 /*
 	//test NM
 	std::string a = "ATATTA";
@@ -66,9 +66,9 @@ int main(int argc, const char** argv)
 	std::cout<<std::endl;
 	printAlignment(b,a,vec);
 */
-	float *memory;
-	std::string a = "ATATTA";
-	std::string b = "ATAT";
+	//float *memory;
+	//std::string a = "ATATTA";
+	//std::string b = "ATAT";
 	//std::string a = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTA";
 	//std::string b = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAAT";
 	/*
@@ -89,6 +89,7 @@ int main(int argc, const char** argv)
 		}
 	}
 	*/
+	/*
 	memory = initializeMemoryMatrixCPU(a,b,2);
 	for(int i=0;i<(a.length()+1);i++)
 	{
@@ -99,6 +100,25 @@ int main(int argc, const char** argv)
 		std::cout<<std::endl;
 	}
 	free(memory);
+	return 0;
+	*/
+	std::string a = "TGTTACGG";
+	std::string b = "GGTTGACTA";
+	double i,j,k,l,s;
+	std::vector<char> vec;
+	NeedlemanWunsch(a,b,2,sim,i,j,k,l,s,vec);
+	//std::cout<<a<<" : "<<b<<" "<<i<<" "<<j<<" "<<k<<" "<<l<<" S: "<<s<<std::endl;
+	std::cout<<"Path: ";
+	for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
+	std::cout<<std::endl;
+	printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
+
+	SmithWaterman(a,b,2,sim,i,j,k,l,s,vec);
+	//std::cout<<a<<" : "<<b<<" "<<i<<" "<<j<<" "<<k<<" "<<l<<" S: "<<s<<std::endl;
+	std::cout<<"Path: ";
+	for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
+	std::cout<<std::endl;
+	printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
 	return 0;
 }
 

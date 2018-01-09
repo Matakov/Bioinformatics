@@ -27,7 +27,7 @@ double sim(char , char );
 
 void NeedlemanWunsch(std::string& , std::string& , double , double (*)(char,char), double& ,double& ,double& , double& ,double& ,std::vector<char>& );
 
-void printAlignment(std::string const& ,std::string const& ,std::vector<char> const& );
+void printAlignment(std::string const& ,std::string const& ,std::vector<char> const& , int, int, int, int);
 
 void NWG(std::string& , std::string& , double , double (*)(char,char), double& ,int ,int ,int ,int ,double& ,double& , double& ,double& ,std::vector<char>& );
 
@@ -37,4 +37,4 @@ void NWH(std::string& , std::string& , double , double (*sim)(char,char), int ,i
 
 void padding(std::string&, std::string&, int, int);
 
-void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe):
+void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe);

@@ -152,124 +152,123 @@ Output parameters:
 */
 void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
 {
-    //initialization
-    int m=s1.length()+1;
-    int n=s2.length()+1;
-    //std::cout<<"Lengths: "<<m-1<<" "<<n-1<<std::endl;
-    //opening and closing opening
-    double d=penalty;
-    double e=penalty;
-    double en,f,h;
-    //pi = 3, pd = 2, pa = 1, ps = 4;
-    char pi = 'i';//double pi = 3; //insert
-    char pd = 'd';//double pd = 2; //delete
-    char pa = 'm';//double pa = 1; //match - mismatch
-    char ps = 'e';//double ps = 4;
-    double H[m][n];
-    char M[m][n];//double M[m][n];
-    double Gi[m][n];
-    double Gd[m][n];
-    double E[m][n];
-    double F[m][n];
+	//initialization
+	int m=s1.length()+1;
+	int n=s2.length()+1;
+	//std::cout<<"Lengths: "<<m-1<<" "<<n-1<<std::endl;
+	//opening and closing opening
+	double d=penalty;
+	double e=penalty;
+	double en,f,h;
+	//pi = 3, pd = 2, pa = 1, ps = 4;
+	char pi = 'i';//double pi = 3; //insert
+	char pd = 'd';//double pd = 2; //delete
+	char pa = 'm';//double pa = 1; //match - mismatch
+	char ps = 'e';//double ps = 4;
+	double H[m][n];
+	char M[m][n];//double M[m][n];
+	double Gi[m][n];
+	double Gd[m][n];
+	double E[m][n];
+	double F[m][n];
 
-    //solving part
-    //fill elements with zeros
-    std::fill(Gi[0], Gi[0] + m * n, 0);
-    std::fill(Gd[0], Gd[0] + m * n, 0);
-    //std::fill(M[0], M[0] + m * n, 0);
-    
-    for(int i=1;i<m;i++)
-    {
-        H[i][0]=-(d+e*(i-1));
-        M[i][0]=pd;
-        E[i][0]= -1.0/0.0;//-inf
-    }
-    for(int i=1;i<n;i++)
-    {
-        H[0][i]=-(d+e*(i-1));
-        M[0][i]=pi;
-        F[0][i]= -1.0/0.0;//-inf
-    }
-    M[0][0]='e';//M[0][0]=ps;   
-    H[0][0]=0;
+	//solving part
+	//fill elements with zeros
+	std::fill(Gi[0], Gi[0] + m * n, 0);
+	std::fill(Gd[0], Gd[0] + m * n, 0);
+	//std::fill(M[0], M[0] + m * n, 0);
+	
+	for(int i=1;i<m;i++)
+	{
+		H[i][0]=-(d+e*(i-1));
+		M[i][0]=pd;
+		E[i][0]= -1.0/0.0;//-inf
+	}
+	for(int i=1;i<n;i++)
+	{
+		H[0][i]=-(d+e*(i-1));
+		M[0][i]=pi;
+		F[0][i]= -1.0/0.0;//-inf
+	}
+	M[0][0]='e';//M[0][0]=ps;	
+	H[0][0]=0;
 
-    for(int i=1;i<m;i++)
-    {
-        for(int j=1;j<n;j++)
-        {
+	for(int i=1;i<m;i++)
+	{
+		for(int j=1;j<n;j++)
+		{
 
-            E[i][j] = std::max(E[i][j-1]-e,H[i][j-1]-d);
-            F[i][j] = std::max(F[i-1][j]-e,H[i-1][j]-d);
+			E[i][j] = std::max(E[i][j-1]-e,H[i][j-1]-d);
+			F[i][j] = std::max(F[i-1][j]-e,H[i-1][j]-d);
 
-            f = std::max(H[i-1][j]-d,F[i-1][j]-e);
-            en = std::max(H[i][j-1]-d,E[i][j-1]-e);
-            h = H[i-1][j-1] + sim(s1[i-1],s2[j-1]);
-            if (f==(F[i-1][j]-e)) Gd[i][j] = Gd[i-1][j]+1;
-            if (f==(E[i][j-1]-e)) Gi[i][j] = Gi[i][j-1]+1;
-            H[i][j]=maxFun(f,en,h);
-            if (H[i][j]==en) M[i][j]=pi;
-            if (H[i][j]==f) M[i][j]=pd;
-            if (H[i][j]==h) M[i][j]=pa;
-        }
-    }
-    /*
-    //print H
-    std::cout<<"H: "<<std::endl;    
-    printMatrix(&H,m,n);
-    std::cout<<std::endl;
-    std::cout<<"M: "<<std::endl;    
-    printMatrix(&M,m,n);
-    std::cout<<std::endl;
-    std::cout<<"Gi: "<<std::endl;
-    //print Gi
-    printMatrix(&Gi,m,n);
-    std::cout<<std::endl;
-    //print Gd
-    std::cout<<"Gd: "<<std::endl;
-    printMatrix(&Gd,m,n);
-    std::cout<<std::endl;
-    //print E
-    std::cout<<"E: "<<std::endl;
-    printMatrix(&E,m,n);
-    std::cout<<std::endl;
-    //print F
-    std::cout<<"F: "<<std::endl;
-    printMatrix(&F,m,n);
-    */
-    //Reconstrucion
-    int i=m-1;
-    int j=n-1;
-    std::vector<char> p;
-    while(M[i][j]!=ps)
-    {
-        if(M[i][j]==pi)
-        {
-            p.insert(p.begin(),M[i][j]);//Gi[i][j]+1);
-            j = j - 1;  //- Gi[i][j] - 1;
-        }
-        if(M[i][j]==pd)
-        {
-            p.insert(p.begin(),M[i][j]);//Gd[i][j]+1);
-            i = i - 1; //- Gd[i][j] - 1;
-        }
-        if(M[i][j]==pa)
-        {
-            p.insert(p.begin(),M[i][j]);
-            i--;
-            j--;
-        }
-    }
+			f = std::max(H[i-1][j]-d,F[i-1][j]-e);
+			en = std::max(H[i][j-1]-d,E[i][j-1]-e);
+			h = H[i-1][j-1] + sim(s1[i-1],s2[j-1]);
+			if (f==(F[i-1][j]-en)) Gd[i][j] = Gd[i-1][j]+1;
+			if (f==(E[i][j-1]-en)) Gi[i][j] = Gi[i][j-1]+1;
+			H[i][j]=maxFun(f,en,h);
+			if (H[i][j]==en) M[i][j]=pi;
+			if (H[i][j]==f)	M[i][j]=pd;
+			if (H[i][j]==h)	M[i][j]=pa;
+		}
+	}
+	/*
+	//print H
+	std::cout<<"H: "<<std::endl;	
+	for(int i=0;i<m;i++)
+	{
+		for(int j=0;j<n;j++)
+		{
+			std::cout<<std::setw(5)<<H[i][j]<<" ";
+		}
+		std::cout<<std::endl;
+	}
+	//print M
+	std::cout<<"M: "<<std::endl;	
+	for(int i=0;i<m;i++)
+	{
+		for(int j=0;j<n;j++)
+		{
+			std::cout<<std::setw(5)<<M[i][j]<<" ";
+		}
+		std::cout<<std::endl;
+	}
+	*/
+	//Reconstrucion
+	int i=m-1;
+	int j=n-1;
+	std::vector<char> p;
+	while(M[i][j]!=ps)
+	{
+		if(M[i][j]==pi)
+		{
+			p.insert(p.begin(),M[i][j]);//Gi[i][j]+1);
+			j = j - 1;  //- Gi[i][j] - 1;
+		}
+		if(M[i][j]==pd)
+		{
+			p.insert(p.begin(),M[i][j]);//Gd[i][j]+1);
+			i = i - 1; //- Gd[i][j] - 1;
+		}
+		if(M[i][j]==pa)
+		{
+			p.insert(p.begin(),M[i][j]);
+			i--;
+			j--;
+		}
+	}
 
-    
+	
 
-    //Data to return
-    b1=0;
-    e1=0;
-    b2=m-1;
-    e2=n-1;
-    s=H[m-1][n-1];
-    pe=p;
-    return;
+	//Data to return
+	b1=0;
+	e1=m-1;
+	b2=0;
+	e2=n-1;
+	//std::cout<<b1<<" "<<e1<<" "<<b2<<" "<<e2<<std::endl;
+	s=H[m-1][n-1];
+	pe=p;
+	return;
 }
 
 /*
@@ -362,7 +361,7 @@ void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*si
 
         }
     }
-    
+    /*
     //print H
     std::cout<<"H: "<<std::endl;    
     for(int i=0;i<m;i++)
@@ -383,14 +382,14 @@ void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*si
         }
         std::cout<<std::endl;
     }
-    
+    */
     //Reconstrucion
     int i=e1;
     int j=e2;
     std::vector<char> p;
     while(M[i][j]!=ps)
     {
-        std::cout<<i<<" "<<j<<" "<<M[i][j]<<std::endl;
+        //std::cout<<i<<" "<<j<<" "<<M[i][j]<<std::endl;
         if(M[i][j]==pi)
         {
             p.insert(p.begin(),M[i][j]);//Gi[i][j]+1);
@@ -415,50 +414,64 @@ void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*si
     b2=(double)j;
     e1=e1-1;
     e2=e2-1;
-    std::cout<<b1<<" "<<e1<<" "<<b1<<" "<<e2<<std::endl;
+    //std::cout<<b1<<" "<<e1<<" "<<b1<<" "<<e2<<std::endl;
     s=H[(int)e1][(int)e2];
     pe=p;
     return;
 }
 
-void printAlignment(std::string const& s1,std::string const& s2,std::vector<char> const& vec)
+void printAlignment(std::string const& s1,std::string const& s2,std::vector<char> const& vec,int b1, int e1, int b2, int e2)
 {
-    char pi = 'i';//double pi = 3; //insert
-    char pd = 'd';//double pd = 2; //delete
-    char pa = 'm';//double pa = 1; //match - mismatch
-    char ps = 'e';//double ps = 4;
+	char pi = 'i';//double pi = 3; //insert
+	char pd = 'd';//double pd = 2; //delete
+	char pa = 'm';//double pa = 1; //match - mismatch
+	char ps = 'e';//double ps = 4;
 
-    std::string ps1="";
-    std::string ps2="";
-    int c1=0;
-    int c2=0;
-    for(int i=0;i<vec.size();i++)
-    {
-        //std::cout<<i<<" "<<vec[i]<<" "<<s1[i]<<" "<<s2[i]<<std::endl;
-        if(vec[i]=='i')
-        {
-            ps2+=s2[c2];
-            ps1+='-';
-            c2++;
-        }
-        if(vec[i]=='d')
-        {
-            ps2+='-';
-            ps1+=s1[c1];
-            c1++;       
-        }
-        if(vec[i]=='m')
-        {
-            ps1+=s1[c1];
-            ps2+=s2[c2];
-            c1++;
-            c2++;
-        }
-    }
-    
-    std::cout<<"Alignment: "<<std::endl;
-    std::cout<<ps2<<"\n"<<ps1<<std::endl;
-    return;
+	std::string ps1="";
+	std::string ps2="";
+	int c1=0;
+	int c2=0;
+	
+
+	std::string str1 = s1.substr(b1,e1);
+	std::string str2 = s2.substr(b2,e2);
+
+	//std::cout<<b1<<" "<<b2<<std::endl;
+	//std::cout<<e1<<" "<<e2<<std::endl;
+
+	//std::cout<<s1<<std::endl;
+	//std::cout<<s2<<std::endl;
+
+	//std::cout<<str1<<std::endl;
+	//std::cout<<str2<<std::endl;
+
+	for(int i=0;i<vec.size();i++)
+	{
+		//std::cout<<i<<" "<<vec[i]<<" "<<s1[i]<<" "<<s2[i]<<std::endl;
+		if(vec[i]=='i')
+		{
+			ps2+=str2[c2];
+			ps1+='-';
+			c2++;
+		}
+		if(vec[i]=='d')
+		{
+			ps2+='-';
+			ps1+=str1[c1];
+			c1++;		
+		}
+		if(vec[i]=='m')
+		{
+			ps1+=str1[c1];
+			ps2+=str2[c2];
+			c1++;
+			c2++;
+		}
+	}
+	
+	std::cout<<"Alignment: "<<std::endl;
+	std::cout<<ps1<<"\n"<<ps2<<std::endl;
+	return;
 }
     
 
