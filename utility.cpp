@@ -697,25 +697,28 @@ void NWH(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
 
 
 /*
+Authors: Matej Crnac
+
+Solving phase of Needleman-Wunsch algorithm for string alignments with linear memory complexity ( O(n) )
 Input parameters:
         - string s1
         - string s2
         - penalty for gaps
         - function for evaluating match/mismatch
 Output parameters:
-        - s   - alignment score
-        
+        - s  - alignment score
 */
-/*
 void NWS(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& s)
 {
     //initialization
     int m=s1.length()+1;
     int n=s2.length()+1;
+
     //std::cout<<"Lengths: "<<m-1<<" "<<n-1<<std::endl;
     //opening and closing opening
     double d=penalty;
     double e=penalty;
+
     double en,f,h;
     double H[n];
     double E[n];
@@ -724,18 +727,21 @@ void NWS(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
     double m1,h1,e1;
     H[0]=0;
     F[0]=0; 
-    for(int i=0;i<n;i++)
+
+    for(int i=1; i<n; i++)
     {
         H[i]=-(d+e*(i-1));
         F[i]=-1.0/0.0;
     }
-    for(int i=0;i<m;i++)
+
+    for(int i=1; i<m; i++)
     {
         if(i==1) m1 = 0;
         else m1 =-(d+e*(i-2));
         h1 = -(d+e*(i-1));
         e1 = -1.0/0.0;
-        for(int j=0;j<n;j++)
+
+        for(int j=1; j<n; j++)
         {
             en = std::max(h1-d,e1-e);
             f = std::max(H[j]-d,F[j]-e);
@@ -748,10 +754,10 @@ void NWS(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
             
         }
     }
-    s = H[i];
+
+    s = H[n-1];
     return;
 }
-*/
 
 
 
