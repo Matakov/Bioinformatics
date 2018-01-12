@@ -632,6 +632,12 @@ void NWG(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
     e2=n-1;
     s=H[m-1][n-1];
     pe=p;
+    std::cout<<"pas mater: "<<std::endl;
+    for(int z=0;z<p.size();z++)
+    {
+	std::cout<<p[z]<<" ";
+    }
+    std::cout<<std::endl;
     return;
 }
 /*
@@ -770,6 +776,7 @@ void Hirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, d
 {	
 	char pd = 'd';//delete
 	char pi = 'i';//insert
+	std::cout<<" m: "<<m<<std::endl;
 	double dummy_b1,dummy_e1,dummy_b2,dummy_e2,dummy_s;
 	if (n==0)
 	{
@@ -786,11 +793,17 @@ void Hirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, d
 	if (m==1)
 	{
 		NWG(s1,s2,e,sim,gf1,gb1,0,0, dummy_b1,dummy_e1,dummy_b2,dummy_e2,dummy_s ,p);
+		for(int k=0;k<p.size();k++)
+		{
+			std::cout<<p[k]<<" ";
+		}
+		std::cout<<std::endl;
 		return;
 	}
 	int r = m/2;
 	std::string s1u = s1.substr(0,r);
-	std::string s1d = s1.substr(m-1,r+1);
+	std::string s1d = s1.substr(r+1,m-r);
+	std::reverse(s1d.begin(), s1d.end());
 	std::string s2r = s2;
 	std::reverse(s2r.begin(), s2r.end());
 	
@@ -821,9 +834,9 @@ void Hirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, d
 		}
 	}
 	s1u = s1.substr(0,r);
-	s1d = s1.substr(r+1,m-1);
+	s1d = s1.substr(r+1,m-r);
 	std::string s2u = s2.substr(0,c);
-	std::string s2d = s2.substr(c+1,n-1);
+	std::string s2d = s2.substr(c+1,n-c);
 		
 	std::vector<char> p0;
 	std::vector<char> p1;
