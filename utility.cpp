@@ -155,7 +155,6 @@ void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*
 	//initialization
 	int m=s1.length()+1;
 	int n=s2.length()+1;
-	//std::cout<<"Lengths: "<<m-1<<" "<<n-1<<std::endl;
 	//opening and closing opening
 	double d=penalty;
 	double e=penalty;
@@ -212,28 +211,6 @@ void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*
 			if (H[i][j]==h)	M[i][j]=pa;
 		}
 	}
-	/*
-	//print H
-	std::cout<<"H: "<<std::endl;	
-	for(int i=0;i<m;i++)
-	{
-		for(int j=0;j<n;j++)
-		{
-			std::cout<<std::setw(5)<<H[i][j]<<" ";
-		}
-		std::cout<<std::endl;
-	}
-	//print M
-	std::cout<<"M: "<<std::endl;	
-	for(int i=0;i<m;i++)
-	{
-		for(int j=0;j<n;j++)
-		{
-			std::cout<<std::setw(5)<<M[i][j]<<" ";
-		}
-		std::cout<<std::endl;
-	}
-	*/
 	//Reconstrucion
 	int i=m-1;
 	int j=n-1;
@@ -265,7 +242,6 @@ void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*
 	e1=m-1;
 	b2=0;
 	e2=n-1;
-	//std::cout<<b1<<" "<<e1<<" "<<b2<<" "<<e2<<std::endl;
 	s=H[m-1][n-1];
 	pe=p;
 	return;
@@ -293,7 +269,6 @@ void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*si
     //initialization
     int m=s1.length()+1;
     int n=s2.length()+1;
-    //std::cout<<"Lengths: "<<m-1<<" "<<n-1<<std::endl;
     //opening and closing opening
     double d=penalty;
     double e=penalty;
@@ -383,13 +358,12 @@ void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*si
         std::cout<<std::endl;
     }
     */
-    //Reconstrucion
+    //Reconstruction
     int i=e1;
     int j=e2;
     std::vector<char> p;
     while(M[i][j]!=ps)
     {
-        //std::cout<<i<<" "<<j<<" "<<M[i][j]<<std::endl;
         if(M[i][j]==pi)
         {
             p.insert(p.begin(),M[i][j]);//Gi[i][j]+1);
@@ -414,7 +388,6 @@ void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*si
     b2=(double)j;
     e1=e1-1;
     e2=e2-1;
-    //std::cout<<b1<<" "<<e1<<" "<<b1<<" "<<e2<<std::endl;
     s=H[(int)e1][(int)e2];
     pe=p;
     return;
@@ -436,18 +409,8 @@ void printAlignment(std::string const& s1,std::string const& s2,std::vector<char
 	std::string str1 = s1.substr(b1,e1);
 	std::string str2 = s2.substr(b2,e2);
 
-	//std::cout<<b1<<" "<<b2<<std::endl;
-	//std::cout<<e1<<" "<<e2<<std::endl;
-
-	//std::cout<<s1<<std::endl;
-	//std::cout<<s2<<std::endl;
-
-	//std::cout<<str1<<std::endl;
-	//std::cout<<str2<<std::endl;
-
 	for(int i=0;i<vec.size();i++)
 	{
-		//std::cout<<i<<" "<<vec[i]<<" "<<s1[i]<<" "<<s2[i]<<std::endl;
 		if(vec[i]=='i')
 		{
 			ps2+=str2[c2];
@@ -567,8 +530,7 @@ Output parameters:
         - s   - alignment score
         - pe  - path for alignment
 */
-/*
-void NWG(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& b1,int gf1,int gb1,int gf2,int gb2,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
+void NWG(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), int gf1,int gb1,int gf2,int gb2,double& b1, double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
 {
     //initialization
     int m=s1.length()+1;
@@ -613,28 +575,28 @@ void NWG(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
 
     for(int i=1;i<m;i++)
     {
-        for(int j=1;j<n;j++)
-        {
-
-            E[i][j] = std::max(E[i][j-1]-e,H[i][j-1]-d);
-            F[i][j] = std::max(F[i-1][j]-e,H[i-1][j]-d);
-
-            f = std::max(H[i-1][j]-d,F[i-1][j]-e);
-            en = std::max(H[i][j-1]-d,E[i][j-1]-e);
-            h = H[i-1][j-1] + sim(s1[i-1],s2[j-1]);
-            if (f==(F[i-1][j]-e)) Gd[i][j] = Gd[i-1][j]+1;
-            if (f==(E[i][j-1]-e)) Gi[i][j] = Gi[i][j-1]+1;
-            H[i][j]=maxFun(f,en,h);
-            //HWG
-            if (gf1 && j==1) H(i,j)=en;
-            if (gb1 && i==1) H(i,j)=f;
-            if (gf2 && j==n-1) H(i,j)=en;
-            if (gb2 && i==m-1) H(i,j)=f;
+    	for(int j=1;j<n;j++)
+    	{
+		F[i][j] = std::max(H[i-1][j]-d,F[i-1][j]-e);
+        	E[i][j] = std::max(H[i][j-1]-d,E[i][j-1]-e);
             
-            if (H[i][j]==en) M[i][j]=pi;
-            if (H[i][j]==f) M[i][j]=pd;
-            if (H[i][j]==h) M[i][j]=pa;
-            
+
+        	f = std::max(H[i-1][j]-d,F[i-1][j]-e);
+        	en = std::max(H[i][j-1]-d,E[i][j-1]-e);
+        	h = H[i-1][j-1] + sim(s1[i-1],s2[j-1]);
+        	if (f==(F[i-1][j]-en)) Gd[i][j] = Gd[i-1][j]+1;
+        	if (f==(E[i][j-1]-en)) Gi[i][j] = Gi[i][j-1]+1;
+        	H[i][j]=maxFun(f,en,h);
+        	//HWG
+        	if (gf1 && j==1) H(i,j)=en;
+        	if (gf2 && i==1) H(i,j)=f;
+        	if (gb1 && j==n-1) H(i,j)=en;
+        	if (gb2 && i==m-1) H(i,j)=f;
+           
+        	if (H[i][j]==en) M[i][j]=pi;
+        	if (H[i][j]==f) M[i][j]=pd;
+        	if (H[i][j]==h) M[i][j]=pa;
+           
         }
     }
 
@@ -665,14 +627,75 @@ void NWG(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
 
     //Data to return
     b1=0;
-    e1=0;
-    b2=m-1;
+    e1=m-1;
+    b2=0;
     e2=n-1;
     s=H[m-1][n-1];
     pe=p;
     return;
 }
+/*
+Authors: Franjo Matkovic
+
+Input parameters:
+        - string s1
+        - string s2
+        - penalty for gaps
+        - function for evaluating match/mismatch
+        - gf1 - sequence 1 begins with a gap
+        - gf2 - sequence 2 begins with a gap
+Output parameters:
+        - F   - alignment score
+        - H  - path for alignment
 */
+void NWH(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char),int gf1,int gf2, double* HR, double* FR)
+{
+    //initialization
+    int m=s1.length()+1;
+    int n=s2.length()+1;
+    double g1=0;
+    double g2=0;
+    if (gf1) g1 = d-e;
+    if (gf2) g2 = d-e;
+    double en,f,h;
+    double H[n];
+    double E[n];
+    double F[n];
+
+    double m1,h1,e1;
+    H[0]=0;
+    F[0]=0; 
+    for(int i=0;i<n;i++)
+    {
+        H[i]=-(d+e*(i-1))+g2;
+        F[i]=-1.0/0.0;
+    }
+    for(int i=0;i<m;i++)
+    {
+        if(i==1) m1 = 0;
+        else m1 =-(d+e*(i-2))+g1;
+        h1 = -(d+e*(i-1))+g1;
+        e1 = -1.0/0.0;
+        for(int j=0;j<n;j++)
+        {
+            en = std::max(h1-d,e1-e);
+            f = std::max(H[j]-d,F[j]-e);
+            h = m1 + sim(s1(i-1),s2(j-1));
+            h1 = maxFun(en,f,h);
+            e1 = en;
+            m1 = H[j];
+            H[j] = h1;
+            F[j] = f;
+            
+        }
+    }
+    //OUTPUT
+    HR=H;
+    FR=F;
+    return;
+}
+
+
 /*
 Input parameters:
         - string s1
@@ -729,65 +752,7 @@ void NWS(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
     return;
 }
 */
-/*
-Authors: Franjo Matkovic
 
-Input parameters:
-        - string s1
-        - string s2
-        - penalty for gaps
-        - function for evaluating match/mismatch
-        - gf1 - sequence 1 begins with a gap
-        - gf2 - sequence 2 begins with a gap
-Output parameters:
-        - F   - alignment score
-        - H  - path for alignment
-*/
-/*
-void NWH(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char),int gf1,int gf2, double* HR, double* FR)
-{
-    //initialization
-    int m=s1.length()+1;
-    int n=s2.length()+1;
-    double g1=0;
-    double g2=0;
-    if (gf1) g1 = d-e;
-    if (gf2) g2 = d-e;
-    double en,f,h;
-    double H[n];
-    double E[n];
-    double F[n];
 
-    double m1,h1,e1;
-    H[0]=0;
-    F[0]=0; 
-    for(int i=0;i<n;i++)
-    {
-        H[i]=-(d+e*(i-1))+g2;
-        F[i]=-1.0/0.0;
-    }
-    for(int i=0;i<m;i++)
-    {
-        if(i==1) m1 = 0;
-        else m1 =-(d+e*(i-2))+g1;
-        h1 = -(d+e*(i-1))+g1;
-        e1 = -1.0/0.0;
-        for(int j=0;j<n;j++)
-        {
-            en = std::max(h1-d,e1-e);
-            f = std::max(H[j]-d,F[j]-e);
-            h = m1 + sim(s1(i-1),s2(j-1));
-            h1 = maxFun(en,f,h);
-            e1 = en;
-            m1 = H[j];
-            H[j] = h1;
-            F[j] = f;
-            
-        }
-    }
-    //OUTPUT
-    HR=H;
-    FR=F;
-    return;
-}
-*/
+
+
