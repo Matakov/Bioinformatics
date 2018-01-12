@@ -66,9 +66,9 @@ int main(int argc, const char** argv)
 	std::cout<<std::endl;
 	printAlignment(b,a,vec);
 */
-	//float *memory;
-	//std::string a = "ATATTA";
-	//std::string b = "ATAT";
+	float *memory;
+	std::string a = "ATATTA";
+	std::string b = "ATAT";
 	//std::string a = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTA";
 	//std::string b = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAAT";
 	/*
@@ -89,37 +89,49 @@ int main(int argc, const char** argv)
 		}
 	}
 	*/
+	
+	
+	//memory = allocateMatrixMemoryCPU(a,b);
 	/*
 	memory = initializeMemoryMatrixCPU(a,b,2);
+		
 	for(int i=0;i<(a.length()+1);i++)
 	{
 		for(int j=0;j<(b.length()+1);j++)
 		{
-			std::cout<<memory[i*(a.length()+1)+j]<<" ";
+			std::cout<<memory[i*(b.length()+1)+j]<<" ";
 		}
 		std::cout<<std::endl;
 	}
+	
+	std::cout<<memory<<std::endl;
 	free(memory);
 	return 0;
 	*/
-	std::string a = "TGTTACGG";
-	std::string b = "GGTTGACTA";
+	//std::string a = "TGTTACGG";
+	//std::string b = "GGTTGACTA";
 	double i,j,k,l,s;
 	std::vector<char> vec;
-	NeedlemanWunsch(a,b,2,sim,i,j,k,l,s,vec);
+	//NeedlemanWunsch(a,b,2,sim,i,j,k,l,s,vec);
 	//std::cout<<a<<" : "<<b<<" "<<i<<" "<<j<<" "<<k<<" "<<l<<" S: "<<s<<std::endl;
-	std::cout<<"Path: ";
-	for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
-	std::cout<<std::endl;
-	printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
+	//std::cout<<"Path: ";
+	//for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
+	//std::cout<<std::endl;
+	//printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
 
-	SmithWaterman(a,b,2,sim,i,j,k,l,s,vec);
+	//SmithWaterman(a,b,2,sim,i,j,k,l,s,vec);
 	//std::cout<<a<<" : "<<b<<" "<<i<<" "<<j<<" "<<k<<" "<<l<<" S: "<<s<<std::endl;
+	//std::cout<<"Path: ";
+	//for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
+	//std::cout<<std::endl;
+	//printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
+	Hirschberg(a,b,a.length()+1,b.length()+1,-2,-2,sim,0,0,vec);
 	std::cout<<"Path: ";
 	for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
 	std::cout<<std::endl;
-	printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
+	//printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
 	return 0;
+	
 }
 
 

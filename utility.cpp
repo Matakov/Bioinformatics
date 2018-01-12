@@ -588,10 +588,10 @@ void NWG(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
         	if (f==(E[i][j-1]-en)) Gi[i][j] = Gi[i][j-1]+1;
         	H[i][j]=maxFun(f,en,h);
         	//HWG
-        	if (gf1 && j==1) H(i,j)=en;
-        	if (gf2 && i==1) H(i,j)=f;
-        	if (gb1 && j==n-1) H(i,j)=en;
-        	if (gb2 && i==m-1) H(i,j)=f;
+        	if (gf1 && j==1) H[i][j]=en;
+        	if (gf2 && i==1) H[i][j]=f;
+        	if (gb1 && j==n-1) H[i][j]=en;
+        	if (gb2 && i==m-1) H[i][j]=f;
            
         	if (H[i][j]==en) M[i][j]=pi;
         	if (H[i][j]==f) M[i][j]=pd;
@@ -648,13 +648,15 @@ Output parameters:
         - F   - alignment score
         - H  - path for alignment
 */
-void NWH(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char),int gf1,int gf2, double* HR, double* FR)
+void NWH(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char),int gf1,int gf2, double** HR, double** FR)
 {
     //initialization
     int m=s1.length()+1;
     int n=s2.length()+1;
     double g1=0;
     double g2=0;
+    double d=penalty;
+    double e=penalty;
     if (gf1) g1 = d-e;
     if (gf2) g2 = d-e;
     double en,f,h;
@@ -680,7 +682,7 @@ void NWH(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
         {
             en = std::max(h1-d,e1-e);
             f = std::max(H[j]-d,F[j]-e);
-            h = m1 + sim(s1(i-1),s2(j-1));
+            h = m1 + sim(s1[i-1],s2[j-1]);
             h1 = maxFun(en,f,h);
             e1 = en;
             m1 = H[j];
@@ -690,8 +692,8 @@ void NWH(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
         }
     }
     //OUTPUT
-    HR=H;
-    FR=F;
+    *HR=H;
+    *FR=F;
     return;
 }
 
@@ -745,7 +747,7 @@ void NWS(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
         {
             en = std::max(h1-d,e1-e);
             f = std::max(H[j]-d,F[j]-e);
-            h = m1 + sim(s1(i-1),s2(j-1));
+            h = m1 + sim(s1[i-1],s2[j-1]);
             h1 = maxFun(en,f,h);
             e1 = en;
             m1 = H[j];
@@ -764,12 +766,11 @@ Author: Dario Sitnik
 Hirschberg algorithm for aligning sequences
 */
 
-void Hirschberg(std::string& s1, int m, int n, std::string& s2, int d, int e, double (*sim)(char,char),int gf1,int gb1,std::vector<char>& p) 
+void Hirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, double (*sim)(char,char),int gf1,int gb1,std::vector<char>& p) 
 {	
-	int m = s1.length()+1;
-	int n = s2.length()+1;
 	char pd = 'd';//delete
 	char pi = 'i';//insert
+	double dummy_b1,dummy_e1,dummy_b2,dummy_e2,dummy_s;
 	if (n==0)
 	{
 		std::vector<char> p_temp(m,pd);
@@ -784,20 +785,21 @@ void Hirschberg(std::string& s1, int m, int n, std::string& s2, int d, int e, do
 	}
 	if (m==1)
 	{
-		NWG(s1,s2,m,n,d,e,sim,gf1,gb1,&p);
+		NWG(s1,s2,e,sim,gf1,gb1,0,0, dummy_b1,dummy_e1,dummy_b2,dummy_e2,dummy_s ,p);
 		return;
 	}
 	int r = m/2;
 	std::string s1u = s1.substr(0,r);
 	std::string s1d = s1.substr(m-1,r+1);
-	std::string s2r = reverse(s2.begin(), s2.end());
+	std::string s2r = s2;
+	std::reverse(s2r.begin(), s2r.end());
 	
 	double* H1u;
 	double* F1u;
-	NWH(s1u,s2,r,n,d,e,sim,gf1,0,&H1u,&F1u);
+	NWH(s1u,s2,e,sim,gf1,0,&H1u,&F1u);
 	double* H1d;
 	double* F1d;
-	NWH(s1d,s2r,m-r-1,n,d,e,sim,gb1,0,&H1d,&F1d);
+	NWH(s1d,s2r,e,sim,gb1,0,&H1d,&F1d);
 	double s = -1.0/0.0;
 	int c = -1;
 	int g = 0;
@@ -820,13 +822,13 @@ void Hirschberg(std::string& s1, int m, int n, std::string& s2, int d, int e, do
 	}
 	s1u = s1.substr(0,r);
 	s1d = s1.substr(r+1,m-1);
-	s2u = s2.substr(0,c);
-	s2d = s2.substr(c+1,n-1);
+	std::string s2u = s2.substr(0,c);
+	std::string s2d = s2.substr(c+1,n-1);
 		
 	std::vector<char> p0;
 	std::vector<char> p1;
-	Hirschberg(s1u, s2u, r, c, d, e, sim, int gf1, g, p0);
-	Hirschberg(s1d, s2d, m-r-1, n-c-1, d, e, sim, int g, gb1, p1); 	
+	Hirschberg(s1u, s2u, r, c, d, e, sim, gf1, g, p0);
+	Hirschberg(s1d, s2d, m-r-1, n-c-1, d, e, sim, g, gb1, p1); 	
 	p.reserve(p0.size()+p1.size());
 	p.insert(p.end(),p0.begin(),p0.end());
 	p.insert(p.end(),p1.begin(),p1.end());
