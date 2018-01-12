@@ -759,6 +759,78 @@ void NWS(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
     return;
 }
 
+/*
+Author: Dario Sitnik
+Hirschberg algorithm for aligning sequences
+*/
+
+void Hirschberg(std::string& s1, int m, int n, std::string& s2, int d, int e, double (*sim)(char,char),int gf1,int gb1,std::vector<char>& p) 
+{	
+	int m = s1.length()+1;
+	int n = s2.length()+1;
+	char pd = 'd';//delete
+	char pi = 'i';//insert
+	if (n==0)
+	{
+		std::vector<char> p_temp(m,pd);
+		p = p_temp;
+		return;
+	} 
+	if (m==0)
+	{
+		std::vector<char> p_temp(m,pi);
+		p = p_temp;		
+		return;			
+	}
+	if (m==1)
+	{
+		NWG(s1,s2,m,n,d,e,sim,gf1,gb1,&p);
+		return;
+	}
+	int r = m/2;
+	std::string s1u = s1.substr(0,r);
+	std::string s1d = s1.substr(m-1,r+1);
+	std::string s2r = reverse(s2.begin(), s2.end());
+	
+	double* H1u;
+	double* F1u;
+	NWH(s1u,s2,r,n,d,e,sim,gf1,0,&H1u,&F1u);
+	double* H1d;
+	double* F1d;
+	NWH(s1d,s2r,m-r-1,n,d,e,sim,gb1,0,&H1d,&F1d);
+	double s = -1.0/0.0;
+	int c = -1;
+	int g = 0;
+	for(int i=0;i<n;i++)
+	{
+		double h = H1u[i]+H1d[n-i];
+		double a = F1u[i]+F1d[n-1]+d-e;
+		if (h>s)
+		{
+			s=h;
+			c=i;
+			g=0;		
+		}
+		if (a>s)
+		{
+			s=a;
+			c=i;
+			g=1;		
+		}
+	}
+	s1u = s1.substr(0,r);
+	s1d = s1.substr(r+1,m-1);
+	s2u = s2.substr(0,c);
+	s2d = s2.substr(c+1,n-1);
+		
+	std::vector<char> p0;
+	std::vector<char> p1;
+	Hirschberg(s1u, s2u, r, c, d, e, sim, int gf1, g, p0);
+	Hirschberg(s1d, s2d, m-r-1, n-c-1, d, e, sim, int g, gb1, p1); 	
+	p.reserve(p0.size()+p1.size());
+	p.insert(p.end(),p0.begin(),p0.end());
+	p.insert(p.end(),p1.begin(),p1.end());
+}
 
 
 
