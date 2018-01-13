@@ -702,6 +702,212 @@ void NWH(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
     *FR=F;
     return;
 }
+/*
+Authors: Franjo Matkovic
+
+Input parameters:
+        - string s1
+        - string s2
+        - penalty for gaps
+        - function for evaluating match/mismatch
+        - gf1 - sequence 1 begins with a gap
+        - gf2 - sequence 2 begins with a gap
+Output parameters:
+        - F   - alignment score
+        - H  - path for alignment
+*/
+void NWGU(std::string& s1,std::string& s2, double const& m, double const& n,double const& d,double const& e,(*sim)(char,char),double const& gf1, double const& gb1, double const& gf2, double const& gb2, double s)
+{
+	
+	double H[m][n];
+	double E[m][n];
+	double m1,h1,e1,e2,en,f1,f2,f,p1,h;
+	H[0][0]=0;
+	double g1=0;
+	double g2=0;
+	double d=penalty;
+	double e=penalty;
+	double js,je;
+	if (gf1) g1 = d-e;
+	if (gf2) g2 = d-e;
+	double t = std::max(m,n) - s/sim("a","a");
+	double ul = (t-std::abs(m-n))/2;
+	double ur = ul;
+	if (n>=m)
+	{
+		ur+=n-m;
+	}
+	else
+	{
+		ul+=m-n;
+	}
+	for(int i=1;i<m;i++)
+	{
+		H[i][0] = -(d + e*(i-1));
+		E[i][0] = -1.0/0.0;
+	}
+	for(int j=1;j<n;j++)
+	{
+		H[0][j] = -(d + e*(j-1));
+		E[0][j] = -1.0/0.0;
+	}
+	for(int i=1;i<m;i++)
+	{
+		for(int j=1;j<n;j++)
+		{
+			H[i][j] = -1.0/0.0;
+			E[i][j] = -1.0/0.0;
+			F[i][j] = -1.0/0.0;
+		}
+	}
+	for(int i=1;i<m;i++)
+	{
+		js = std::max(1,i-ul);
+		je = std::max(n,i+ur);
+		for(int j=js;j<je;j++)
+		{
+			e1 = H[i][j-1] - d;
+			e2 = E[i][j-1] - e;
+			en = std::max(e1,e2);
+			f1 = H[i-1][j] - d;
+			f2 = H[i-1][j] - e;
+			f = std::max(f1,f2);
+			p1 = sim(s1[i-1],s2[j-1]);
+			h = H[i-1][j-1] + p1;
+			H[i][j] = maxFun(en,f,h);
+			F[i][j] = f;
+			E[i][j] = en;
+		}
+	}
+	s = H[m][n];
+	return;
+}
+/*
+Authors: Franjo Matkovic
+
+Input parameters:
+        - string s1
+        - string s2
+        - penalty for gaps
+        - function for evaluating match/mismatch
+        - gf1 - sequence 1 begins with a gap
+        - gf2 - sequence 2 begins with a gap
+Output parameters:
+        - F   - alignment score
+        - H  - path for alignment
+*/
+void NWHU(std::string const& s1,std::string const& s2, double const& m, double const& n, double const& d, double const& e, (*sim)(char,char), double gf1,double gf2, double ul, double ur, double s)
+{
+    	double g1=0;
+    	double g2=0;
+    	if (gf1) g1 = d-e;
+    	if (gf2) g2 = d-e;
+    	double en,f,h;
+    	double H[n];
+    	double E[n];
+    	double F[n];
+    	double m1,h1,e1,je,js;
+	double t = std::max(m,n) - s/sim('a','a');
+	double ul = (t-std::abs(m,n))/2;
+	double ur = ul;
+	if(n>=m) ur += n-m;
+	else ul += m-n;
+    	H[0]=0;
+    	F[0]=0; 
+    	for(int i=1;i<n;i++)
+    	{
+    	    	H[i]=-(d+e*(i-1))+g2;
+    	    	F[i]=-1.0/0.0;
+    	}
+    	for(int i=1;i<m;i++)
+    	{
+    	    	if(i==1) m1 = 0;
+    	    	else m1 =-(d+e*(i-2))+g1;
+    	    	h1 = -(d+e*(i-1))+g1;
+    	    	e1 = -1.0/0.0;
+		if(i-1>ul) m1=-1.0/0.0;
+		if(i>ul) h2 = -1.0/0.0;
+		if(i+ur<=n)
+		{
+			H[i+ur] = -1.0/0.0;
+			F[i+ur] = -1.0/0.0;
+		}
+		js = std::max(1,i-ul);
+		je = std::max(n,i+ur);			
+   	    	for(int j=js;j<je;j++)
+   	    	{
+            		en = std::max(h1-d,e1-e);
+            		f = std::max(H[j]-d,F[j]-e);
+            		h = m1 + sim(s1[i-1],s2[j-1]);
+            		h1 = maxFun(en,f,h);
+            		e1 = en;
+            		m1 = H[j];
+            		H[j] = h1;
+            		F[j] = f;
+        	}
+    	}
+    	//OUTPUT
+	for(int i=0;i<n-ul;i++)
+	{
+		H[i]=-1.0/0.0;
+		F[i]=-1.0/0.0;
+	}
+    	*HR=H;
+    	*FR=F;
+    	return;
+}
+
+/*
+Authors: Franjo Matkovic
+
+Input parameters:
+        - string s1
+        - string s2
+        - penalty for gaps
+        - function for evaluating match/mismatch
+        - gf1 - sequence 1 begins with a gap
+        - gf2 - sequence 2 begins with a gap
+Output parameters:
+        - F   - alignment score
+        - H  - path for alignment
+*/
+void NWS1(std::string const& s1,std::string const& s2, double const& m,double const& n,double const& d,double const& e, (*sim)(char,char), double& s)
+{
+	double H[m][n];
+	double E[m][n];
+	double F[m][n];
+	double e1,e2,en,f1,f2,f,p1,h;
+	H[0][0]=0;
+	for(int i=0;i<m;i++)
+	{
+		H[i][0] = -(d + e*(i-1));
+		E[i][0] = -1.0/0.0;
+	}
+	for(int j=1;j<n;j++)
+	{
+		H[0][j] = -(d + e*(j-1));
+		E[0][j] = -1.0/0.0;
+	}
+	for(int i=1;i<m;i++)
+	{
+		for(int j=1;j<n;j++)
+		{
+			e1 = H[i][j-1] - d;
+			e2 = E[i][j-1] - e;
+			en = std::max(e1,e2);
+			f1 = H[i-1][j] - d;
+			f2 = F[i-1][j] - e;
+			f = std::max(f1,f2);
+			p1 = sim(s1[i-1],s2[j-1]);
+			h = H[i-1][j-1] + p1;
+			H[i][j] = maxFun(en,f,h);
+			F[i][j] = f;
+			E[i][j] = en;
+		}
+	}
+	s = H[m][n];
+	return;
+}
 
 
 /*
