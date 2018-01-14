@@ -1,6 +1,6 @@
 #include "main.h"
 #include "utility.h"
-//#include "SW.h"
+#include "SW.h"
 #include "argparse.hpp"
 #include <string>
 
@@ -125,11 +125,12 @@ int main(int argc, const char** argv)
 	//for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
 	//std::cout<<std::endl;
 	//printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
-	Hirschberg(a,b,a.length(),b.length(),-2,-2,sim,0,0,vec);
-	std::cout<<"Path: ";
-	for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
-	std::cout<<std::endl;
+	//Hirschberg(a,b,a.length(),b.length(),-2,-2,sim,0,0,vec);
+	//std::cout<<"Path: ";
+	//for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
+	//std::cout<<std::endl;
 	//printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
+	NeedlmanWunschGPU(a,b,2,2,sim);
 	return 0;
 	
 }

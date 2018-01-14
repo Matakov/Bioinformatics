@@ -39,3 +39,8 @@ extern "C" void NWS(char* , char*, float* );
 
 extern "C" float* allocateMatrixMemoryCPU(const std::string& ,const std::string& );
 extern "C" float* initializeMemoryMatrixCPU(const std::string& ,const std::string& , double );
+
+void NeedlmanWunschGPU(std::string const&, std::string const&, double const, double const,double (*)(char,char));
+//__global__ void initmemoryHNW(double *,double const ,double const , double const , double const , double const );
+//__global__ void initmemoryHSW(double *,double const ,double const , double const , double const , double const );
+//__global__ void initmemoryAR(double *,double const ,double const , double const , double const , double const );
