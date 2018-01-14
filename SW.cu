@@ -53,7 +53,7 @@ Parameters:
 -Function to allocate unified memory
  and copy to unified memory
 */
-extern "C" char* allocateMemory(std::string& x)
+char* allocateMemory(std::string const& x)
 {
     char* memory;
     const char *cstr = x.c_str();
@@ -229,16 +229,99 @@ __global__ void initmemoryAR(double *memory,double const m,double const n, doubl
     return;
 }
 */
-/*__global__ void NW_GPU(double* memory,double const m,double const n, double const d, double const e, double const N)
+
+
+/*
+Authors: Matej Crnac
+
+Parameters:
+    input:  index - matrix index
+            n - s2 length + 1
+    output: - index of character in left string for given matrix index.
+*/
+__device__ long int find_index_left(long int index,long int n)
 {
-    extern __shared__ int s[];
+    return index/n - 1;
+}
+
+/*
+Authors: Matej Crnac
+
+Parameters:
+    input:  index - matrix index
+            n - s2 length + 1
+    output: - index of character in upper string for given matrix index.
+*/
+__device__ long int find_index_upper(long int index,long int n)
+{
+    return index%n - 1;
+}
+
+/*
+Authors: Matej Crnac, Franjo Matković
+
+Parameters:
+    input:  memory - pointer to matrix
+            m - s1 length + 1
+            n - s2 length + 1
+            d - penalty
+            e - penalty
+            N - matrix size
+            sim - similarity function
+            s1 - string 1
+            s2 - string 2
+    output: - solved cost matrix
+-Function to solve NeedlemanWunsch using GPU
+*/
+__global__ void NW_GPU(double* memory,long int const m,long int const n, double const d, double const e, long int const N,double (*sim)(char,char),const char* s1, const char* s2)
+{
+    //extern __shared__ int s[];
     
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    int stride = blockDim.x * gridDim.x;
+    //printf("Hello from block %d, thread %d, index %d, Memory is %f\n", blockIdx.x, threadIdx.x,index,memory[index]);
+   
+    for (int i = index; i < N; i += stride)
+    {
+        if(i%n!=0 && i > n)
+        {   
+            double simil;
+            if(s1[find_index_left(i,n)]==s2[find_index_upper(i,n)]) simil = 1;
+            else simil = -3;
+            printf("Hello from block %d, thread %d, index %d, Memory is %f\n", blockIdx.x, threadIdx.x,index,memory[index]);
+            printf("Index: %d\n", i);
+            printf("memory[i-n-1] = %f\n", memory[i-n-1]);
+            printf("find_L:\n");
+            printf("find_ind_l = %d\n",find_index_left(i,n));
+            printf("s1[find_index_left(i,n)] = %c\n",s1[find_index_left(i,n)]);
+            printf("s1 finished\n");
+            printf("s2[find_index_upper(i,n)] = %c\n",s2[find_index_upper(i,n)]);
+            printf("s2 finished\n");
+            printf("sim: = %f\n",simil);
+            printf("sim finished\n");
+            printf("Index: %d, memory[i-n-1] = %f, sim: %d find_ind_l = %d, find_ind_u = %d, memory[i-n] = %f, memory[i-1] = %f\n",i, memory[i-n-1],simil, find_index_left(i,n), find_index_upper(i,n), memory[i-n], memory[i-1]);
+            memory[i]=max(memory[i-n-1]+simil,max(memory[i-n] - d,memory[i-1] - d));
+        }
+    }
     
 
     return;
 }
+
+
+/*
+Authors: Franjo Matkovic
+
+Parameters:
+    input:  s1 - string 1
+            s2 - string 2
+            d  - penalty
+            e  - penalty
+            sim- similarity function
+    output: - solved cost matrix
+-Function to solve NeedlemanWunsch
 */
-void NeedlmanWunschGPU(std::string const& s1, std::string const& s2, double const d, double const e,double (*sim)(char,char))
+void NeedlemanWunschGPU(std::string const& s1, std::string const& s2, double const d, double const e,double (*sim)(char,char))
 {
     double *Gi,*Gd,*F,*E;
     double *memory;
@@ -259,17 +342,18 @@ void NeedlmanWunschGPU(std::string const& s1, std::string const& s2, double cons
 
     initmemoryHNW<<<numBlocks, blockSize>>>(memory,m+1,n+1,d,e,N);
     cudaDeviceSynchronize();
-    //NW_GPU<<<numBlocks, blockSize,numBlocks*sizeof(int)>>>(memory,m+1,n+1,d,e,sim,N,M,Gi,Gd,F,E); 
-    /*  
-    for(int i=0;i<m+1;i++)
+    
+    const char* x1 = allocateMemory(s1);
+    const char* x2 = allocateMemory(s2);
+    int i = 0;
+
+    while( x2[i] != '\0')
     {
-        for(int j=0;j<n+1;j++)
-        {
-            if((i*(n+1)+j)%(n+1)==0) memory[i*(n+1)+j]=-(d+e*(i-1));
-            if((i*(n+1)+j)<(n+1)) memory[i*(n+1)+j]=-(d+e*(j-1));
-        }   
+        std::cout<<x1[i];
+        i++;
     }
-    */  
+    NW_GPU<<<numBlocks, blockSize>>>(memory,m+1,n+1,d,e,N,sim,x1,x2); 
+    cudaDeviceSynchronize();
 
     for(int i=0;i<m+1;i++)
     {

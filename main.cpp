@@ -130,7 +130,7 @@ int main(int argc, const char** argv)
 	//for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
 	//std::cout<<std::endl;
 	//printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
-	NeedlmanWunschGPU(a,b,2,2,sim);
+	NeedlemanWunschGPU(a,b,2,2,sim);
 	return 0;
 	
 }
