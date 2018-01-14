@@ -69,6 +69,7 @@ char* allocateMemory(std::string const& x)
     return memory;
 }
 
+
 /*
 Authors: Franjo Matkovic
 
@@ -198,6 +199,27 @@ __global__ void initmemoryHNW(double *memory,long int const m,long int const n, 
     }
     return;
 }
+
+/*
+Authors: Matej Crnac
+
+Parameters:
+    input:  semaphor - pointer to semaphor list
+            n - seamphor length
+    output: - initialised semaphor.
+*/
+__global__ void initsemaphor(int *semaphore, int N)
+{
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    int stride = blockDim.x * gridDim.x;
+    //printf("Hello from block %d, thread %d, index %d, Memory is %f\n", blockIdx.x, threadIdx.x,index,memory[index]);
+   
+    for (int i = index; i < N; i += stride)
+    {
+            semaphore[i]=0;
+    }
+    return;
+}
 /*
 __global__ void initmemoryHSW(double *memory,double const m,double const n, double const d, double const e, double const N)
 {
@@ -273,14 +295,29 @@ Parameters:
     output: - solved cost matrix
 -Function to solve NeedlemanWunsch using GPU
 */
-__global__ void NW_GPU(double* memory,long int const m,long int const n, double const d, double const e, long int const N,double (*sim)(char,char),const char* s1, const char* s2)
+__global__ void NW_GPU(double* memory,long int const m,long int const n, double const d, double const e, long int const N,double (*sim)(char,char),const char* s1, const char* s2,int* semaphore)
 {
     //extern __shared__ int s[];
-    
+    printf("Bez: %d, blockDim: %d, n = %ld\n",(int)n,blockDim.x,n);
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     int stride = blockDim.x * gridDim.x;
-    //printf("Hello from block %d, thread %d, index %d, Memory is %f\n", blockIdx.x, threadIdx.x,index,memory[index]);
-   
+    printf("index: %d Stride: %d N: %ld\n",index,stride,N);
+    //printf("%f\n",(float)(m-1)/(blockDim.x/2));
+    //printf("blockIdx.x-int((double)(n-1)/(blockDim.x/2)) = %f\n",blockIdx.x-int((double)(n-1)/(blockDim.x/2)));
+    //printf("semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))] = %f \n",semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))]);
+    //printf("index = %d, blockidx = %d, Semaphor = %d\n",index,blockIdx.x,semaphore[blockIdx.x]);
+    while(1)
+    {
+        __syncthreads();
+        if(blockIdx.x==0) break;
+        //if(blockIdx.x<(int)(double)(n-1)/(blockDim.x/2) && semaphore[blockIdx.x-1]==1) break;
+        //if(blockIdx.x>=(int)(double)(n-1)/(blockDim.x/2) && semaphore[blockIdx.x-1]==1 && semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))]==1) break;
+        //if(blockIdx.x%(int)(double)(n-1)/(blockDim.x/2)==0 && semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))]==1) break;
+
+        if(blockIdx.x<(int)n && semaphore[blockIdx.x-1]==1) break;
+        if(blockIdx.x>=(int)n && semaphore[blockIdx.x-1]==1 && semaphore[blockIdx.x-int(n)]==1) break;
+        if(blockIdx.x%(int)n==0 && semaphore[blockIdx.x-int(n)]==1) break;
+    }
     for (int i = index; i < N; i += stride)
     {
         if(i%n!=0 && i > n)
@@ -288,21 +325,25 @@ __global__ void NW_GPU(double* memory,long int const m,long int const n, double 
             double simil;
             if(s1[find_index_left(i,n)]==s2[find_index_upper(i,n)]) simil = 1;
             else simil = -3;
-            printf("Hello from block %d, thread %d, index %d, Memory is %f\n", blockIdx.x, threadIdx.x,index,memory[index]);
-            printf("Index: %d\n", i);
-            printf("memory[i-n-1] = %f\n", memory[i-n-1]);
-            printf("find_L:\n");
-            printf("find_ind_l = %d\n",find_index_left(i,n));
-            printf("s1[find_index_left(i,n)] = %c\n",s1[find_index_left(i,n)]);
-            printf("s1 finished\n");
-            printf("s2[find_index_upper(i,n)] = %c\n",s2[find_index_upper(i,n)]);
-            printf("s2 finished\n");
-            printf("sim: = %f\n",simil);
-            printf("sim finished\n");
-            printf("Index: %d, memory[i-n-1] = %f, sim: %d find_ind_l = %d, find_ind_u = %d, memory[i-n] = %f, memory[i-1] = %f\n",i, memory[i-n-1],simil, find_index_left(i,n), find_index_upper(i,n), memory[i-n], memory[i-1]);
+            //printf("Hello from block %d, thread %d, index %d, Memory is %f\n", blockIdx.x, threadIdx.x,index,memory[index]);
+            //printf("Index: %d\n", i);
+            //printf("memory[i-n-1] = %f\n", memory[i-n-1]);
+            //printf("find_L:\n");
+            //printf("find_ind_l = %d\n",find_index_left(i,n));
+            //printf("s1[find_index_left(i,n)] = %c\n",s1[find_index_left(i,n)]);
+            //printf("s1 finished\n");
+            //printf("s2[find_index_upper(i,n)] = %c\n",s2[find_index_upper(i,n)]);
+            //printf("s2 finished\n");
+            //printf("sim: = %f\n",simil);
+            //printf("sim finished\n");
+            //printf("Index: %d, memory[i-n-1] = %f, sim: %d find_ind_l = %d, find_ind_u = %d, memory[i-n] = %f, memory[i-1] = %f\n",i, memory[i-n-1],simil, find_index_left(i,n), find_index_upper(i,n), memory[i-n], memory[i-1]);
             memory[i]=max(memory[i-n-1]+simil,max(memory[i-n] - d,memory[i-1] - d));
         }
     }
+    
+    semaphore[blockIdx.x]=1;
+    //semaphore[blockIdx.x+1]=1;
+    //semaphore[blockIdx.x+n]=1;
     
 
     return;
@@ -325,11 +366,11 @@ void NeedlemanWunschGPU(std::string const& s1, std::string const& s2, double con
 {
     double *Gi,*Gd,*F,*E;
     double *memory;
-    char*M;
+    char *M;
     long int m = s1.length();
     long int n = s2.length();
     long int N = (s1.length()+1)*(s2.length()+1);
-
+    long int N_orig = n*m;
     cudaMallocManaged(&memory, N*sizeof(double));
     cudaMallocManaged(&M, N*sizeof(char));
     cudaMallocManaged(&Gi, N*sizeof(double));
@@ -337,23 +378,48 @@ void NeedlemanWunschGPU(std::string const& s1, std::string const& s2, double con
     cudaMallocManaged(&F, N*sizeof(double));
     cudaMallocManaged(&E, N*sizeof(double));
     
-    int blockSize = 2;
+    int blockSize = 1;
     int numBlocks = (N + blockSize - 1) / blockSize;
+    std::cout<<numBlocks<<std::endl;
+
+
+    int *semaphore;
+
+    cudaMallocManaged(&semaphore, numBlocks);
+
+    initsemaphor<<<numBlocks, blockSize>>>(semaphore, numBlocks);
+    cudaDeviceSynchronize();
 
     initmemoryHNW<<<numBlocks, blockSize>>>(memory,m+1,n+1,d,e,N);
     cudaDeviceSynchronize();
     
+    //padding(s1,s2,,);
     const char* x1 = allocateMemory(s1);
     const char* x2 = allocateMemory(s2);
     int i = 0;
 
-    while( x2[i] != '\0')
+    /*while( x2[i] != '\0')
     {
         std::cout<<x1[i];
         i++;
+    }*/
+    
+    std::cout<<"Seamphor before:"<<" ";
+    for(int i=0;i<numBlocks;i++)
+    {
+        std::cout<<semaphore[i]<<" ";    
     }
-    NW_GPU<<<numBlocks, blockSize>>>(memory,m+1,n+1,d,e,N,sim,x1,x2); 
+    std::cout<<std::endl;
+ 
+    NW_GPU<<<numBlocks, blockSize>>>(memory,m+1,n+1,d,e,N,sim,x1,x2,semaphore); 
     cudaDeviceSynchronize();
+    
+    std::cout<<"Seamphor after:"<<" ";
+    for(int i=0;i<numBlocks;i++)
+    {
+        std::cout<<semaphore[i]<<" ";    
+    }
+    std::cout<<std::endl;
 
     for(int i=0;i<m+1;i++)
     {
