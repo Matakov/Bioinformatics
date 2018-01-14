@@ -1053,5 +1053,358 @@ void Hirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, d
 	p.insert(p.end(),p1.begin(),p1.end());
 }
 
+/*
+Author: Dario Sitnik
+Block-Hirschberg algorithm for aligning sequences
+*/
 
+void BHirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, double (*sim)(char,char),int gf1, int gb1, int emax, std::vector<char>& p) 
+{	
+	char pd = 'd';//delete
+	char pi = 'i';//insert
+	std::cout<<" m: "<<m<<std::endl;
+	double dummy_b1,dummy_e1,dummy_b2,dummy_e2,dummy_s;
+	if (n==0)
+	{
+		std::vector<char> p_temp(m,pd);
+		p = p_temp;
+		return;
+	} 
+	if (m==0)
+	{
+		std::vector<char> p_temp(m,pi);
+		p = p_temp;		
+		return;			
+	}
+	if (m*n<=emax)
+	{
+		NWG(s1, s2, e, sim, gf1, gb1, 0, 0, dummy_b1, dummy_e1, dummy_b2, dummy_e2, dummy_s, p);
+		for(int k=0;k<p.size();k++)
+		{
+			std::cout<<p[k]<<" ";
+		}
+		std::cout<<std::endl;
+		return;
+	}
+	int r = m/2;
+	std::string s1u = s1.substr(0,r);
+	std::string s1d = s1.substr(r+1,m-r);
+	std::reverse(s1d.begin(), s1d.end());
+	std::string s2r = s2;
+	std::reverse(s2r.begin(), s2r.end());
+	
+	double* H1u;
+	double* F1u;
+	NWH(s1u,s2,e,sim,gf1,0,&H1u,&F1u);
+	double* H1d;
+	double* F1d;
+	NWH(s1d,s2r,e,sim,gb1,0,&H1d,&F1d);
+	double s = -1.0/0.0;
+	int c = -1;
+	int g = 0;
+	for(int i=0;i<n;i++)
+	{
+		double h = H1u[i]+H1d[n-i];
+		double a = F1u[i]+F1d[n-1]+d-e;
+		if (h>s)
+		{
+			s=h;
+			c=i;
+			g=0;		
+		}
+		if (a>s)
+		{
+			s=a;
+			c=i;
+			g=1;		
+		}
+	}
+	s1u = s1.substr(0,r);
+	s1d = s1.substr(r+1,m-r);
+	std::string s2u = s2.substr(0,c);
+	std::string s2d = s2.substr(c+1,n-c);
+		
+	std::vector<char> p0;
+	std::vector<char> p1;
+	BHirschberg(s1u, s2u, r, c, d, e, sim, gf1, g, emax, p0);
+	BHirschberg(s1d, s2d, m-r-1, n-c-1, d, e, sim, g, gb1, emax, p1); 	
+	p.reserve(p0.size()+p1.size());
+	p.insert(p.end(),p0.begin(),p0.end());
+	p.insert(p.end(),p1.begin(),p1.end());
+}
 
+/*
+Author: Dario Sitnik
+Dynamic-Hirschberg algorithm for aligning sequences
+*/
+
+void DHirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, double (*sim)(char,char),int gf1, int gb1, int gf2, int gb2, int emax, std::vector<char>& p) 
+{	
+	char pd = 'd';//delete
+	char pi = 'i';//insert
+	std::cout<<" m: "<<m<<std::endl;
+	std::string s_temp;
+	int temp;
+	double dummy_b1,dummy_e1,dummy_b2,dummy_e2,dummy_s;
+	if (n==0)
+	{
+		std::vector<char> p_temp(m,pd);
+		p = p_temp;
+		return;
+	} 
+	if (m==0)
+	{
+		std::vector<char> p_temp(m,pi);
+		p = p_temp;		
+		return;			
+	}
+	if (m*n<=emax)
+	{
+		NWG(s1, s2, e, sim, gf1, gb1, 0, 0, dummy_b1, dummy_e1, dummy_b2, dummy_e2, dummy_s, p);
+		for(int k=0;k<p.size();k++)
+		{
+			std::cout<<p[k]<<" ";
+		}
+		std::cout<<std::endl;
+		return;
+	}
+	if (m<n)
+	{
+		//swap
+		s_temp = s1;
+		s1 = s2;
+		s2 = s_temp
+
+		temp = m;
+		m = temp;
+		n = m;
+
+		temp = gf1;
+		gf1 = gf2;
+		gf2 = temp;
+		
+		temp = gb1;
+		gb1 = gb2;
+		gb2 = temp;
+	}
+	int r = m/2;
+	std::string s1u = s1.substr(0,r);
+	std::string s1d = s1.substr(r+1,m-r);
+	std::reverse(s1d.begin(), s1d.end());
+	std::string s2r = s2;
+	std::reverse(s2r.begin(), s2r.end());
+	
+	double* H1u;
+	double* F1u;
+	NWH(s1u,s2,e,sim,gf1,gf2,&H1u,&F1u);//moguce da ce tu biti problem jer nisu isti argumenti kao u pseudokodu
+	double* H1d;
+	double* F1d;
+	NWH(s1d,s2r,e,sim,gb1,gb2,&H1d,&F1d);
+	double s = -1.0/0.0;
+	int c = -1;
+	int g = 0;
+	for(int i=0;i<n;i++)
+	{
+		double h = H1u[i]+H1d[n-i];
+		double a = F1u[i]+F1d[n-1]+d-e;
+		if (h>s)
+		{
+			s=h;
+			c=i;
+			g=0;		
+		}
+		if (a>s)
+		{
+			s=a;
+			c=i;
+			g=1;		
+		}
+	}
+	
+	int g1 = g;
+	int g2 = 0;
+
+	if (n<m)
+	{
+		//swap
+		s_temp = s1;
+		s1 = s2;
+		s2 = s_temp
+
+		int temp;
+		temp = m;
+		m = temp;
+		n = m;
+
+		temp = gf1;
+		gf1 = gf2;
+		gf2 = temp;
+		
+		temp = gb1;
+		gb1 = gb2;
+		gb2 = temp;		
+		
+		temp = r;
+		r = c;
+		c = temp;
+		
+		temp = g1;
+		g1 = g2;
+		g2 = temp;	
+	}
+
+	s1u = s1.substr(0,r);
+	s1d = s1.substr(r+1,m-r);
+	std::string s2u = s2.substr(0,c);
+	std::string s2d = s2.substr(c+1,n-c);
+
+	std::vector<char> p0;
+	std::vector<char> p1;
+	DHirschberg(s1u, s2u, r, c, d, e, sim, gf1, g1, gf2, g2, emax, p0);
+	DHirschberg(s1d, s2d, m-r-1, n-c-1, d, e, sim, g1, gb1, g2, gb2, emax, p1); 	
+	p.reserve(p0.size()+p1.size());
+	p.insert(p.end(),p0.begin(),p0.end());
+	p.insert(p.end(),p1.begin(),p1.end());
+}
+
+/*
+Author: Dario Sitnik
+Ukkonen-Hirschberg algorithm for aligning sequences
+*/
+
+void UHirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, double (*sim)(char,char),int gf1, int gb1, int gf2, int gb2, int emax, double s, std::vector<char>& p) 
+{	
+	char pd = 'd';//delete
+	char pi = 'i';//insert
+	std::cout<<" m: "<<m<<std::endl;
+	std::string s_temp;
+	int temp;
+	double t = std::max(m,n) - s/sim("a","a");	
+	double dummy_b1,dummy_e1,dummy_b2,dummy_e2,dummy_s;
+	if (n==0)
+	{
+		std::vector<char> p_temp(m,pd);
+		p = p_temp;
+		return;
+	} 
+	if (m==0)
+	{
+		std::vector<char> p_temp(m,pi);
+		p = p_temp;		
+		return;			
+	}
+	if (t*n<=emax)//promjena u odnosu na dhirschberga
+	{
+		NWGU(s1, s2, m, n, d, e,sim, gf1, gb1, gf2, gb2, s, p);
+		for(int k=0;k<p.size();k++)
+		{
+			std::cout<<p[k]<<" ";
+		}
+		std::cout<<std::endl;
+		return;
+	}
+	if (m<n)
+	{
+		//swap
+		s_temp = s1;
+		s1 = s2;
+		s2 = s_temp
+
+		temp = m;
+		m = temp;
+		n = m;
+
+		temp = gf1;
+		gf1 = gf2;
+		gf2 = temp;
+		
+		temp = gb1;
+		gb1 = gb2;
+		gb2 = temp;
+	}
+	int r = m/2;
+	std::string s1u = s1.substr(0,r);
+	std::string s1d = s1.substr(r+1,m-r);
+	std::reverse(s1d.begin(), s1d.end());
+	std::string s2r = s2;
+	std::reverse(s2r.begin(), s2r.end());
+	
+	double ul = (t-std::abs(m-n))/2;
+	double ur = ul;
+	double* H1u;
+	double* F1u;
+	NWHU(s1u, s2, r, n, d, e, sim, gf1, gf2, ul, ur, s, &H1u, &F1u);
+	double* H1d;
+	double* F1d;
+	NWHU(s1d, s2r, m-r-1, n, d, e, sim, gb1, gb2, ul, ur, s, &H1d, &F1d);
+	//double s = -1.0/0.0;
+	int c = -1;
+	int g = 0;
+	double su = 0;
+	double sd = 0;
+
+	for(int i=0;i<n;i++)
+	{
+		double h = H1u[i]+H1d[n-i];
+		double a = F1u[i]+F1d[n-1]+d-e;
+		if (h>s)
+		{
+			su=H1u[i];
+			sd=H1d[n-i];
+			c=i;
+			g=0;		
+		}
+		if (a>s)
+		{
+			su=F1u[i]+d-e;
+			sd=F1d[n-i]+d-e;
+			c=i;
+			g=1;		
+		}
+	}
+	
+	int g1 = g;
+	int g2 = 0;
+
+	if (n<m)
+	{
+		//swap
+		s_temp = s1;
+		s1 = s2;
+		s2 = s_temp
+
+		int temp;
+		temp = m;
+		m = temp;
+		n = m;
+
+		temp = gf1;
+		gf1 = gf2;
+		gf2 = temp;
+		
+		temp = gb1;
+		gb1 = gb2;
+		gb2 = temp;		
+		
+		temp = r;
+		r = c;
+		c = temp;
+		
+		temp = g1;
+		g1 = g2;
+		g2 = temp;	
+	}
+
+	s1u = s1.substr(0,r);
+	s1d = s1.substr(r+1,m-r);
+	std::string s2u = s2.substr(0,c);
+	std::string s2d = s2.substr(c+1,n-c);
+
+	std::vector<char> p0;
+	std::vector<char> p1;
+	UHirschberg(s1u, s2u, r, c, d, e, sim, gf1, g1, gf2, g2, emax, su, p0);
+	UHirschberg(s1d, s2d, m-r-1, n-c-1, d, e, sim, g1, gb1, g2, gb2, emax, sd, p1); 	
+	p.reserve(p0.size()+p1.size());
+	p.insert(p.end(),p0.begin(),p0.end());
+	p.insert(p.end(),p1.begin(),p1.end());
+}

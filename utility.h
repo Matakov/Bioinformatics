@@ -40,3 +40,9 @@ void padding(std::string&, std::string&, int, int);
 void SmithWaterman(std::string&, std::string&, double, double (*)(char,char), double&, double&, double&, double&, double&, std::vector<char>&);
 
 void Hirschberg(std::string&, std::string&, int, int, int, int, double (*)(char,char), int, int, std::vector<char>&);
+
+void BHirschberg(std::string&, std::string&, int, int,  int, int, double (*)(char,char),int, int, int, std::vector<char>&);
+
+void DHirschberg(std::string&, std::string&, int, int,  int, int, double (*)(char,char),int, int, int, int, int, std::vector<char>&); 
+
+void UHirschberg(std::string&, std::string&, int, int,  int, int, double (*)(char,char),int, int, int, int, int, double, std::vector<char>&);
