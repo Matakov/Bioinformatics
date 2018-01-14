@@ -150,6 +150,7 @@ Output parameters:
         - s  - alignment score
         - pe  - path for alignment
 */
+
 void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
 {
 	//initialization
@@ -530,6 +531,7 @@ Output parameters:
         - s   - alignment score
         - pe  - path for alignment
 */
+/*
 void NWG(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), int gf1,int gb1,int gf2,int gb2,double& b1, double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
 {
     //initialization
@@ -640,6 +642,7 @@ void NWG(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
     std::cout<<std::endl;
     return;
 }
+*/
 /*
 Authors: Franjo Matkovic
 
@@ -654,6 +657,7 @@ Output parameters:
         - F   - alignment score
         - H  - path for alignment
 */
+/*
 void NWH(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char),int gf1,int gf2, double** HR, double** FR)
 {
     //initialization
@@ -702,6 +706,7 @@ void NWH(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
     *FR=F;
     return;
 }
+*/
 /*
 Authors: Franjo Matkovic
 
@@ -716,6 +721,7 @@ Output parameters:
         - F   - alignment score
         - H  - path for alignment
 */
+/*
 void NWGU(std::string& s1,std::string& s2, double const& m, double const& n,double const& d,double const& e,(*sim)(char,char),double const& gf1, double const& gb1, double const& gf2, double const& gb2, double s)
 {
 	
@@ -782,6 +788,7 @@ void NWGU(std::string& s1,std::string& s2, double const& m, double const& n,doub
 	s = H[m][n];
 	return;
 }
+*/
 /*
 Authors: Franjo Matkovic
 
@@ -796,6 +803,7 @@ Output parameters:
         - F   - alignment score
         - H  - path for alignment
 */
+/*
 void NWHU(std::string const& s1,std::string const& s2, double const& m, double const& n, double const& d, double const& e, (*sim)(char,char), double gf1,double gf2, double ul, double ur, double s)
 {
     	double g1=0;
@@ -856,7 +864,7 @@ void NWHU(std::string const& s1,std::string const& s2, double const& m, double c
     	*FR=F;
     	return;
 }
-
+*/
 /*
 Authors: Franjo Matkovic
 
@@ -871,6 +879,7 @@ Output parameters:
         - F   - alignment score
         - H  - path for alignment
 */
+/*
 void NWS1(std::string const& s1,std::string const& s2, double const& m,double const& n,double const& d,double const& e, (*sim)(char,char), double& s)
 {
 	double H[m][n];
@@ -909,7 +918,7 @@ void NWS1(std::string const& s1,std::string const& s2, double const& m,double co
 	return;
 }
 
-
+*/
 /*
 Authors: Matej Crnac
 
@@ -922,6 +931,7 @@ Input parameters:
 Output parameters:
         - s  - alignment score
 */
+/*
 void NWS(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& s)
 {
     //initialization
@@ -972,12 +982,12 @@ void NWS(std::string& s1, std::string& s2, double penalty, double (*sim)(char,ch
     s = H[n-1];
     return;
 }
-
+*/
 /*
 Author: Dario Sitnik
 Hirschberg algorithm for aligning sequences
 */
-
+/*
 void Hirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, double (*sim)(char,char),int gf1,int gb1,std::vector<char>& p) 
 {	
 	char pd = 'd';//delete
@@ -1052,12 +1062,12 @@ void Hirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, d
 	p.insert(p.end(),p0.begin(),p0.end());
 	p.insert(p.end(),p1.begin(),p1.end());
 }
-
+*/
 /*
 Author: Dario Sitnik
 Block-Hirschberg algorithm for aligning sequences
 */
-
+/*
 void BHirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, double (*sim)(char,char),int gf1, int gb1, int emax, std::vector<char>& p) 
 {	
 	char pd = 'd';//delete
@@ -1132,12 +1142,12 @@ void BHirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, 
 	p.insert(p.end(),p0.begin(),p0.end());
 	p.insert(p.end(),p1.begin(),p1.end());
 }
-
+*/
 /*
 Author: Dario Sitnik
 Dynamic-Hirschberg algorithm for aligning sequences
 */
-
+/*
 void DHirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, double (*sim)(char,char),int gf1, int gb1, int gf2, int gb2, int emax, std::vector<char>& p) 
 {	
 	char pd = 'd';//delete
@@ -1266,12 +1276,12 @@ void DHirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, 
 	p.insert(p.end(),p0.begin(),p0.end());
 	p.insert(p.end(),p1.begin(),p1.end());
 }
-
+*/
 /*
 Author: Dario Sitnik
 Ukkonen-Hirschberg algorithm for aligning sequences
 */
-
+/*
 void UHirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, double (*sim)(char,char),int gf1, int gb1, int gf2, int gb2, int emax, double s, std::vector<char>& p) 
 {	
 	char pd = 'd';//delete
@@ -1408,3 +1418,4 @@ void UHirschberg(std::string& s1, std::string& s2, int m, int n,  int d, int e, 
 	p.insert(p.end(),p0.begin(),p0.end());
 	p.insert(p.end(),p1.begin(),p1.end());
 }
+*/
