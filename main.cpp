@@ -130,7 +130,8 @@ int main(int argc, const char** argv)
 	//for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
 	//std::cout<<std::endl;
 	//printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
-	NeedlemanWunschGPU(a,b,2,2,sim);
+	//NeedlemanWunschGPU(a,b,2,2,sim);
+	SmithWatermanGPU(a,b,2,2);
 	return 0;
 	
 }
