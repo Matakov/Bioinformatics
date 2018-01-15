@@ -67,10 +67,10 @@ int main(int argc, const char** argv)
 	printAlignment(b,a,vec);
 */
 	float *memory;
-	std::string a = "ATATTA";
-	std::string b = "ATAT";
-	//std::string a = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTA";
-	//std::string b = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAAT";
+	//std::string a = "ATATTA";
+	//std::string b = "ATAT";
+	std::string a = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAAT";
+	std::string b = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAAT";
 	/*
 	memory=allocateMatrixMemory(a,b);
 	std::cout<<"Memory allocated: "<<memory<<std::endl;
@@ -131,7 +131,8 @@ int main(int argc, const char** argv)
 	//std::cout<<std::endl;
 	//printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
 	//NeedlemanWunschGPU(a,b,2,2,sim);
-	SmithWatermanGPU(a,b,2,2);
+	//SmithWatermanGPU(a,b,2,2);
+	SmithWatermanGPU(a,b,2,2,80);
 	return 0;
 	
 }

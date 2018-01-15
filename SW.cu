@@ -530,6 +530,7 @@ Parameters:
     output: - solved cost matrix
 -Function to solve SmithWaterman
 */
+/*
 void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const d, double const e)
 {
     double *Gi,*Gd,*F,*E;
@@ -572,29 +573,29 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
     const char* x2 = allocateMemory(s2);
     //int i = 0;
 
-    /*while( x2[i] != '\0')
+    while( x2[i] != '\0')
     {
         std::cout<<x1[i];
         i++;
-    }*/
-    /*
+    }
+    
     std::cout<<"Seamphore before:"<<" ";
     for(int i=0;i<numBlocks;i++)
     {
         std::cout<<semaphore[i]<<" ";    
     }
     std::cout<<std::endl;
-    */
+    
     SW_GPU<<<numBlocks, blockSize>>>(memory,m+1,n+1,d,e,N,x1,x2,semaphore); 
     cudaDeviceSynchronize();
-    /*
+    
     std::cout<<"Seamphore after:"<<" ";
     for(int i=0;i<numBlocks;i++)
     {
         std::cout<<semaphore[i]<<" ";    
     }
     std::cout<<std::endl;
-    */
+    
     for(int i=0;i<m+1;i++)
     {
         for(int j=0;j<n+1;j++)
@@ -612,3 +613,123 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
     cudaFree(E);
     return;
 } 
+*/
+
+void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const d, double const e, double const B)
+{
+	//input strings are const so we copy
+	std::string string_m(s1);
+	std::string string_n(s2);
+
+	//memory locations 
+	double *Gi,*Gd,*F,*E;
+	double *memory;
+	char *M;
+
+	//sizes of strings
+	long int m = string_m.length();
+	long int n = string_n.length();
+
+
+	//B is the total number of blocks in grid
+	double k = sqrt(B/(m/n));
+	long int blockSize_n = floor(k);
+	long int blockSize_m = floor((m/n)*k);
+
+	//std::cout<<k<<" "<<blockSize_n<<" "<<blockSize_m<<std::endl;
+	//here we define how much will there be blocks in m and n direction
+	long int blockNum_n = ceil((double)n/blockSize_n);
+	long int blockNum_m = ceil((double)m/blockSize_m);	
+	
+	//std::cout<<"Size:"<<n<<" "<<blockSize_n<<" "<<ceil((double)n/blockSize_n)<<" "<<ceil(n/blockSize_n)<<std::endl;
+	//std::cout<<"Size:"<<m<<" "<<blockSize_m<<" "<<ceil((double)m/blockSize_m)<<" "<<ceil(m/blockSize_m)<<std::endl;
+	//here we are padding strings so there are no elements that will be
+ 		 
+	padding(string_m,string_n,blockNum_m*blockSize_m,blockNum_n*blockSize_n);
+	std::cout<<string_m<<std::endl;
+	std::cout<<string_n<<std::endl;
+	//std::cout<<"Size:"<<string_m.length()<<" "<<string_n.length()<<std::endl;
+	
+	//strings have been padded so their length is measured again	
+	m=string_m.length();
+	n=string_n.length();	
+
+	long int N = (m+1)*(n+1);
+	//part of code where memory allocation is happening
+	cudaMallocManaged(&memory, N*sizeof(double));
+	cudaMallocManaged(&M, N*sizeof(char));
+	cudaMallocManaged(&Gi, N*sizeof(double));
+	cudaMallocManaged(&Gd, N*sizeof(double));
+	cudaMallocManaged(&F, N*sizeof(double));
+	cudaMallocManaged(&E, N*sizeof(double));
+
+	//blockSize_m,blockSize_n,blockNum_m,blockNum_n
+	
+
+
+	//memory freeing
+	cudaFree(memory);
+	cudaFree(M);
+	cudaFree(Gi);
+	cudaFree(Gd);
+	cudaFree(F);
+	cudaFree(E);
+	
+	return;
+} 
+
+/*
+void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const d, double const e)
+{
+	//input strings are const so we copy
+	std::string string_m(s1);
+	std::string string_n(s2);
+
+	//memory locations 
+	double *Gi,*Gd,*F,*E;
+	double *memory;
+	char *M;
+
+	//this part here defines how much memory elements will one block solve
+	long int blockSize = 1024;          // one block will solve 1024 elements
+	long int blockSize_m = sqrt(blockSize);     // here we define block size in m direction 
+	long int blockSize_n = sqrt(blockSize);     // here we define block size in n direction
+
+	padding(string_m,string_n,m+m%blockSize_m,n+n%blockSize_n);
+
+	//defining sizes of strings that will be compared
+	long int m = string_m.length();
+	long int n = string_n.length();
+
+	//cost matrix that will be allocated needs to have an extra row and column
+	long int N = (string_m.length()+1)*(string_n.length()+1);
+
+	//here we calculate how much blocks will be in each direction
+	long int numBlocks_m = m/blockSize_m;       // 
+	long int numBlocks_n = n/blockSize_n;       //
+
+	long int numBlocks = numBlocks_m*numBlocks_n;
+
+	//part of code where memory allocation is happening
+	cudaMallocManaged(&memory, N*sizeof(double));
+	cudaMallocManaged(&M, N*sizeof(char));
+	cudaMallocManaged(&Gi, N*sizeof(double));
+	cudaMallocManaged(&Gd, N*sizeof(double));
+	cudaMallocManaged(&F, N*sizeof(double));
+	cudaMallocManaged(&E, N*sizeof(double));
+
+	//now we have block sizes in m and n direction along with number of blocks in m and n direction
+
+
+
+
+	//memory freeing
+	cudaFree(memory);
+	cudaFree(M);
+	cudaFree(Gi);
+	cudaFree(Gd);
+	cudaFree(F);
+	cudaFree(E);
+	return;
+}
+*/
