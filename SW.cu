@@ -458,20 +458,36 @@ __global__ void SW_GPU(double* memory,long int const m,long int const n, double 
     //printf("blockIdx.x-int((double)(n-1)/(blockDim.x/2)) = %f\n",blockIdx.x-int((double)(n-1)/(blockDim.x/2)));
     //printf("semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))] = %f \n",semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))]);
     //printf("index = %d, blockidx = %d, Semaphor = %d\n",index,blockIdx.x,semaphore[blockIdx.x]);
-    while(1)
-    {
-        __syncthreads();
-        if(blockIdx.x==0) break;
-        //if(blockIdx.x<(int)(double)(n-1)/(blockDim.x/2) && semaphore[blockIdx.x-1]==1) break;
-        //if(blockIdx.x>=(int)(double)(n-1)/(blockDim.x/2) && semaphore[blockIdx.x-1]==1 && semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))]==1) break;
-        //if(blockIdx.x%(int)(double)(n-1)/(blockDim.x/2)==0 && semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))]==1) break;
-
-        if(blockIdx.x<(int)n && semaphore[blockIdx.x-1]==1) break;
-        if(blockIdx.x>=(int)n && semaphore[blockIdx.x-1]==1 && semaphore[blockIdx.x-int(n)]==1) break;
-        if(blockIdx.x%(int)n==0 && semaphore[blockIdx.x-int(n)]==1) break;
-    }
+    //printf("gridDim: %d\n",gridDim.x);
     for (int i = index; i < N; i += stride)
     {
+        __syncthreads();
+        while(1)
+        {
+            
+            //printf("index = %d i = %d, blockidx = %d, threadID = %d, Semaphor = %d, memory = %f\n",index,i,blockIdx.x,threadIdx.x,semaphore[blockIdx.x],memory[i-1]);
+            if(i==0) break;
+            //if(blockIdx.x<(int)(double)(n-1)/(blockDim.x/2) && semaphore[blockIdx.x-1]==1) break;
+            //if(blockIdx.x>=(int)(double)(n-1)/(blockDim.x/2) && semaphore[blockIdx.x-1]==1 && semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))]==1) break;
+            //if(blockIdx.x%(int)(double)(n-1)/(blockDim.x/2)==0 && semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))]==1) break;
+
+            if(i<(int)n && semaphore[(i-1)%gridDim.x]>0)
+            {
+                semaphore[(i-1)%gridDim.x]--;
+                break;
+            }
+            if(i>=(int)n && semaphore[(i-1)%gridDim.x]>0 && semaphore[(i-int(n))%gridDim.x]>0)
+            {
+                semaphore[(i-int(n))%gridDim.x]--;
+                semaphore[(i-1)%gridDim.x]--;
+                break;
+            }
+            if(i%(int)n==0 && semaphore[(i-int(n))%gridDim.x]>0)
+            {
+                semaphore[(i-int(n))%gridDim.x]--;
+                break;
+            }
+        }
         if(i%n!=0 && i > n)
         {   
             double simil;
@@ -491,9 +507,10 @@ __global__ void SW_GPU(double* memory,long int const m,long int const n, double 
             //printf("Index: %d, memory[i-n-1] = %f, sim: %d find_ind_l = %d, find_ind_u = %d, memory[i-n] = %f, memory[i-1] = %f\n",i, memory[i-n-1],simil, find_index_left(i,n), find_index_upper(i,n), memory[i-n], memory[i-1]);
             memory[i]=max((double)0,max(memory[i-n-1]+simil,max(memory[i-n] - d,memory[i-1] - d)));
         }
+        semaphore[(blockIdx.x)%gridDim.x]=2;
     }
     
-    semaphore[blockIdx.x]=1;
+    
     //semaphore[blockIdx.x+1]=1;
     //semaphore[blockIdx.x+n]=1;
     
@@ -521,7 +538,7 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
     long int m = s1.length();
     long int n = s2.length();
     long int N = (s1.length()+1)*(s2.length()+1);
-    //long int N_orig = n*m;
+    long int N_orig = n*m;
     cudaMallocManaged(&memory, N*sizeof(double));
     cudaMallocManaged(&M, N*sizeof(char));
     cudaMallocManaged(&Gi, N*sizeof(double));
@@ -530,7 +547,13 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
     cudaMallocManaged(&E, N*sizeof(double));
     
     int blockSize = 1;
-    int numBlocks = (N + blockSize - 1) / blockSize;
+    int numBlocks;
+    if (N <= 240) {
+        numBlocks = N;
+    }
+    else {
+        numBlocks = 240;
+    }
     std::cout<<numBlocks<<std::endl;
 
 
