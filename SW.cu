@@ -694,6 +694,12 @@ __global__ void kernelCallsKernel(float *memory,long int const m,long int const 
     return;
 } 
 
+__global__ void helloWorld()
+{
+	printf("Hello world from thread %d",threadIdx.x);
+	return;
+}
+
 void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const d, double const e, double const B)
 {
 	//input strings are const so we copy
@@ -764,17 +770,18 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	
 	int *semaphore;
 	blockSize = 64;
-	std::cout<<blockNum<<" "<<blockSize<<std::endl;
+	//std::cout<<blockNum<<" "<<blockSize<<std::endl;
 	initsemaphor<<<1, 64>>>(semaphore, blockSize);
     	cudaDeviceSynchronize();
 	//blockSize_m,blockSize_n,blockNum_m,blockNum_n
-	threadSolver<<<1, 64>>>(memory,0,0,n,d,e,5,x1,x2,semaphore);
-	
+	//threadSolver<<<1, 64>>>(memory,0,0,n,d,e,5,x1,x2,semaphore);
+	helloWorld<<<1,1>>>();	
+
 	//threadSolver(float *memory,long int subM,long int subN, long int const n, float const d, float const e, long int const b_size, char *s1, char *s2, int *semaphore)
-	for(int i=0;i<N;i++)
+	/*for(int i=0;i<N;i++)
 	{
 		std::cout<<memory[i]<<" ";
-	}
+	}*/
 
 	//memory freeing
 	cudaFree(memory);
