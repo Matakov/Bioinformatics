@@ -447,7 +447,10 @@ helper function for finding neutral element sim(x,y)<=0
 char findPadChar(char a, char b, char c)
 {
     std::string all("ATCG");
-    all.erase(std::remove(all.begin(), all.end(), a), all.end());
+    if (a != b)
+    {
+        all.erase(std::remove(all.begin(), all.end(), a), all.end());
+    }
     all.erase(std::remove(all.begin(), all.end(), b), all.end());
     if (c == 'N')
     {
