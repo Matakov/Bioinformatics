@@ -615,6 +615,85 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 } 
 */
 
+/*
+Authors: Dario Sitnik, Franjo Matković
+
+Parameters:
+    input:  memory - pointer to matrix
+            m - s1 length + 1
+            n - s2 length + 1
+            d - penalty
+            e - penalty
+            N - matrix size
+            sim - similarity function
+            s1 - string 1
+            s2 - string 2
+    output: - solved cost matrix
+-Function to solve SmithWaterman using GPU on thread level
+*/
+
+__global__ void threadSolver(float *memory,long int subM,long int subN, long int const n, float const d, float const e, long int const b_size, char *s1, char *s2, int *semaphore)
+{
+	long int index = (threadIdx.x/b_size + subM) * n + subN + threadIdx.x % b_size;
+	long int last = (subM + b_size - 1) * n + subN + b_size - 1;
+
+	/*
+	printf("%ld, %ld",index,last);
+	for(long int i=index;i<last;i += blockDim.x)
+	{
+	__syncthreads();
+	while(1)
+	{
+	    
+	    //printf("index = %d i = %d, blockidx = %d, threadID = %d, Semaphor = %d, memory = %f\n",index,i,blockIdx.x,threadIdx.x,semaphore[blockIdx.x],memory[i-1]);
+	    if(i==0) break;
+	    //if(blockIdx.x<(int)(double)(n-1)/(blockDim.x/2) && semaphore[blockIdx.x-1]==1) break;
+	    //if(blockIdx.x>=(int)(double)(n-1)/(blockDim.x/2) && semaphore[blockIdx.x-1]==1 && semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))]==1) break;
+	    //if(blockIdx.x%(int)(double)(n-1)/(blockDim.x/2)==0 && semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))]==1) break;
+
+	    if(i<(int)n && semaphore[(i-1)%blockDim.x]>0)
+	    {
+		semaphore[(i-1)%blockDim.x]--;
+		break;
+	    }
+	    if(i>=(int)n && semaphore[(i-1)%blockDim.x]>0 && semaphore[(i-int(n))%blockDim.x]>0)
+	    {
+		semaphore[(i-int(n))%blockDim.x]--;
+		semaphore[(i-1)%blockDim.x]--;
+		break;
+	    }
+	    if(i%(int)n==0 && semaphore[(i-int(n))%blockDim.x]>0)
+	    {
+		semaphore[(i-int(n))%blockDim.x]--;
+		break;
+	    }
+	}
+	if(i%n!=0 && i > n)
+	{   
+	    float simil;
+	    if(s1[find_index_left(i,n)]==s2[find_index_upper(i,n)]) simil = 1;
+	    else simil = -3;
+	    memory[i]=max((float)0,max(memory[i-n-1]+simil,max(memory[i-n] - d,memory[i-1] - d)));
+	}
+	semaphore[(threadIdx.x)%blockDim.x]=2;
+	}
+	*/
+	return;
+}
+
+//block 
+__global__ void kernelCallsKernel(float *memory,long int const m,long int const n, float const d, float const e, long int N, char *s1, char *s2, int numBlocks)
+{
+    //b_size = n / sqrt(numBlocks);
+    long int subM = blockIdx.x;
+    long int subN;
+    int *semaphore;
+    //initsemaphor(semaphore,blockDim.x);
+    //blockIdx.x //određuje blok
+    //threadSolver<<<1,4>>>(memory,subM,subN,n,d,e,b_size,s1,s2,semaphore);
+    return;
+} 
+
 void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const d, double const e, double const B)
 {
 	//input strings are const so we copy
@@ -622,8 +701,8 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	std::string string_n(s2);
 
 	//memory locations 
-	double *Gi,*Gd,*F,*E;
-	double *memory;
+	float *Gi,*Gd,*F,*E;
+	float *memory;
 	char *M;
 
 	//sizes of strings
@@ -631,23 +710,25 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	long int n = string_n.length();
 
 
-	//B is the total number of blocks in grid
+	//B is the desirable number of blocks in grid
 	double k = sqrt(B/(m/n));
 	long int blockSize_n = floor(k);
 	long int blockSize_m = floor((m/n)*k);
+	long int blockSize = blockSize_n*blockSize_m;
 
 	//std::cout<<k<<" "<<blockSize_n<<" "<<blockSize_m<<std::endl;
 	//here we define how much will there be blocks in m and n direction
 	long int blockNum_n = ceil((double)n/blockSize_n);
 	long int blockNum_m = ceil((double)m/blockSize_m);	
-	
+	long int blockNum = blockNum_m*blockNum_n;
+
 	//std::cout<<"Size:"<<n<<" "<<blockSize_n<<" "<<ceil((double)n/blockSize_n)<<" "<<ceil(n/blockSize_n)<<std::endl;
 	//std::cout<<"Size:"<<m<<" "<<blockSize_m<<" "<<ceil((double)m/blockSize_m)<<" "<<ceil(m/blockSize_m)<<std::endl;
 	//here we are padding strings so there are no elements that will be
  		 
 	padding(string_m,string_n,blockNum_m*blockSize_m,blockNum_n*blockSize_n);
-	std::cout<<string_m<<std::endl;
-	std::cout<<string_n<<std::endl;
+	//std::cout<<string_m<<std::endl;
+	//std::cout<<string_n<<std::endl;
 	//std::cout<<"Size:"<<string_m.length()<<" "<<string_n.length()<<std::endl;
 	
 	//strings have been padded so their length is measured again	
@@ -656,16 +737,44 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 
 	long int N = (m+1)*(n+1);
 	//part of code where memory allocation is happening
-	cudaMallocManaged(&memory, N*sizeof(double));
+	cudaMallocManaged(&memory, N*sizeof(float));
 	cudaMallocManaged(&M, N*sizeof(char));
-	cudaMallocManaged(&Gi, N*sizeof(double));
-	cudaMallocManaged(&Gd, N*sizeof(double));
-	cudaMallocManaged(&F, N*sizeof(double));
-	cudaMallocManaged(&E, N*sizeof(double));
-
-	//blockSize_m,blockSize_n,blockNum_m,blockNum_n
+	cudaMallocManaged(&Gi, N*sizeof(float));
+	cudaMallocManaged(&Gd, N*sizeof(float));
+	cudaMallocManaged(&F, N*sizeof(float));
+	cudaMallocManaged(&E, N*sizeof(float));
 	
-
+	char* x1 ;//= allocateMemory(string_m);
+	
+	const char *cstr = string_m.c_str();
+    	cudaMallocManaged(&x1, string_m.length()*(sizeof(char)+1));
+    	//x.copy( memory, x.length() );
+    	//for(int i=0;i<x.length();++i) memory[i]=cstr[i];
+    	strcpy(x1, cstr);   
+    	x1[string_m.length()]='\0';
+	
+    	char* x2 ;// = allocateMemory(string_n);
+	
+	const char *cstr2 = string_n.c_str();
+	cudaMallocManaged(&x2, string_n.length()*(sizeof(char)+1));
+    	//x.copy( memory, x.length() );
+    	//for(int i=0;i<x.length();++i) memory[i]=cstr[i];
+    	strcpy(x2, cstr2);   
+    	x2[string_n.length()]='\0';
+	
+	int *semaphore;
+	blockSize = 64;
+	std::cout<<blockNum<<" "<<blockSize<<std::endl;
+	initsemaphor<<<1, 64>>>(semaphore, blockSize);
+    	cudaDeviceSynchronize();
+	//blockSize_m,blockSize_n,blockNum_m,blockNum_n
+	threadSolver<<<1, 64>>>(memory,0,0,n,d,e,5,x1,x2,semaphore);
+	
+	//threadSolver(float *memory,long int subM,long int subN, long int const n, float const d, float const e, long int const b_size, char *s1, char *s2, int *semaphore)
+	for(int i=0;i<N;i++)
+	{
+		std::cout<<memory[i]<<" ";
+	}
 
 	//memory freeing
 	cudaFree(memory);
