@@ -471,17 +471,19 @@ sequences padding function to match block dimensions
 */
 void padding(std::string& a, std::string& b, int M, int N)
 {
-    if (a.length()+1 % M != 0)
+    a_len = a.length()+1
+    b_len = b.length()+1
+    if (a_len % M != 0)
         {
-            if (b.length()+1 % N != 0)
+            if (b_len % N != 0)
             {   
                 char pa = findPadChar(a.back(),b.back(), 'N');
                 char pb = findPadChar(a.back(),b.back(), pa);
-                while (a.length()+1 % M != 0)
+                while (a_len % M != 0)
                 {
                     a += pa;
                 }
-                while (b.length()+1 % N != 0)
+                while (b_len+1 % N != 0)
                 {
                     b += pb;
                 }           
@@ -490,7 +492,7 @@ void padding(std::string& a, std::string& b, int M, int N)
             {
         
                 char pa = findPadChar(a.back(),b.back(), 'N');
-                while (a.length()+1 % M != 0)
+                while (a_len % M != 0)
                 {
                     a += pa;
                 }           
@@ -498,12 +500,12 @@ void padding(std::string& a, std::string& b, int M, int N)
         }
     else
     {
-        if (b.length()+1 % N != 0)
+        if (b_len % N != 0)
         {
         std::cout<<a.back()<<" "<<b.back()<<std::endl;
             char pb = findPadChar(a.back(),b.back(), 'N');
         std::cout<<pb<<std::endl;
-            while (b.length()+1 % N != 0)
+            while (b_len % N != 0)
                 {
                     b += pb;
                 }
