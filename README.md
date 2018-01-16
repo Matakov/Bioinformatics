@@ -9,6 +9,11 @@ Project subject is calculating local alignment using Smith-Waterman algorithm im
 
 Team members: Dario Sitnik, Franjo Matković. Matej Crnac
 
+Program is compiled with:
+    nvcc -arch=sm_35 -rdc=true main.cpp utility.cpp SW.cu -std=c++11 -o program
+Program is run with:
+    ./program
+
 # Installation of project dependencies
 
 Follow the next instructions for Ubuntu 16.04:
