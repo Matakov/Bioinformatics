@@ -1,7 +1,6 @@
 #include "main.h"
 #include "utility.h"
 #include "SW.h"
-#include "argparse.hpp"
 #include <string>
 
 int main(int argc, const char** argv)
@@ -53,19 +52,19 @@ int main(int argc, const char** argv)
 	}
 	releaseMemory(mem);
 	*/
-/*
+
 	//test NM
-	std::string a = "ATATTA";
-	std::string b = "ATAT";
-	double i,j,k,l,s;
-	std::vector<char> vec;
-	NeedlemanWunsch(b,b,2,sim,i,j,k,l,s,vec);
+	//std::string a = "ATATTA";
+	//std::string b = "ATAT";
+	//double i,j,k,l,s;
+	//std::vector<char> vec;
+	//NeedlemanWunsch(b,b,2,sim,i,j,k,l,s,vec);
 	//std::cout<<a<<" : "<<b<<" "<<i<<" "<<j<<" "<<k<<" "<<l<<" S: "<<s<<std::endl;
-	std::cout<<"Path: ";
-	for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
-	std::cout<<std::endl;
-	printAlignment(b,a,vec);
-*/
+	//std::cout<<"Path: ";
+	//for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
+	//std::cout<<std::endl;
+	//printAlignment(b,a,vec);
+
 	float *memory;
 	//std::string a = "ATATTAT";
 	//std::string b = "ATATCCG";
@@ -133,7 +132,8 @@ int main(int argc, const char** argv)
 	//NeedlemanWunschGPU(a,b,2,2,sim);
 	//SmithWatermanGPU(a,b,2,2);
 	SmithWatermanGPU(a,b,2,2,200);
-	return 0;
+    //SmithWatermanGPU_Basic(a,b,2,2);	
+    return 0;
 	
 }
 
