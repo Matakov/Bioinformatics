@@ -1,5 +1,6 @@
 #include"SW.h"
 #include"utility.h"
+#include <math.h>
 
 // CUDA kernel to add elements of two arrays
 __global__
@@ -702,6 +703,9 @@ __global__ void helloWorld()
 
 void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const d, double const e, double const B)
 {
+    //DATA PREPARATION
+
+
 	//input strings are const so we copy
 	std::string string_m(s1);
 	std::string string_n(s2);
@@ -712,36 +716,39 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	char *M;
 
 	//sizes of strings
-	long int m = string_m.length();
-	long int n = string_n.length();
+	long int m = string_m.length() + 1;
+	long int n = string_n.length() + 1;
 
 
 	//B is the desirable number of blocks in grid
-	double k = sqrt(B/(m/n));
-	long int blockSize_n = floor(k);
-	long int blockSize_m = floor((m/n)*k);
-	long int blockSize = blockSize_n*blockSize_m;
-
+	double k = sqrt(B/((double)m/n));
+	long int blockNum_n = floor(k);
+	long int blockNum_m = floor(((double)m/n)*k);
+	long int blockNum = blockNum_n*blockNum_m;
+    
+    std::cout<<"k: "<<k<<"B: "<<B<<"m/n: "<<m/n<<"B/m/n: "<<B/(m/n)<<"blockNum_n: "<<blockNum_n<<" "<<"blockNum_m: "<<blockNum_m<<" blockNum: "<<blockNum<<std::endl;
 	//std::cout<<k<<" "<<blockSize_n<<" "<<blockSize_m<<std::endl;
 	//here we define how much will there be blocks in m and n direction
-	long int blockNum_n = ceil((double)n/blockSize_n);
-	long int blockNum_m = ceil((double)m/blockSize_m);	
-	long int blockNum = blockNum_m*blockNum_n;
-
+    long int blockSize_n = ceil((double)n/blockNum_n);
+	long int blockSize = pow (blockSize_n,2);
+    
+    std::cout<<"blockSize: "<<blockSize<<std::endl;
+    std::cout<<"blockNum_n: "<<blockNum_n<<" "<<"blockNum_m: "<<blockNum_m<<" blockNum: "<<blockNum<<std::endl;
+    std::cout<<"n: "<<n<<" "<<"m: "<<m<<std::endl;
 	//std::cout<<"Size:"<<n<<" "<<blockSize_n<<" "<<ceil((double)n/blockSize_n)<<" "<<ceil(n/blockSize_n)<<std::endl;
 	//std::cout<<"Size:"<<m<<" "<<blockSize_m<<" "<<ceil((double)m/blockSize_m)<<" "<<ceil(m/blockSize_m)<<std::endl;
 	//here we are padding strings so there are no elements that will be
  		 
-	padding(string_m,string_n,blockNum_m*blockSize_m,blockNum_n*blockSize_n);
+	padding(string_m,string_n,blockNum_m*blockSize_n,blockNum_n*blockSize_n);
 	//std::cout<<string_m<<std::endl;
 	//std::cout<<string_n<<std::endl;
 	//std::cout<<"Size:"<<string_m.length()<<" "<<string_n.length()<<std::endl;
 	
 	//strings have been padded so their length is measured again	
-	m=string_m.length();
-	n=string_n.length();	
-
-	long int N = (m+1)*(n+1);
+	m=string_m.length()+1;
+	n=string_n.length()+1;	
+    std::cout<<"n: "<<n<<" "<<"m: "<<m<<std::endl;
+	long int N = (m)*(n);
 	//part of code where memory allocation is happening
 	cudaMallocManaged(&memory, N*sizeof(float));
 	cudaMallocManaged(&M, N*sizeof(char));
@@ -769,15 +776,20 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
     	x2[string_n.length()]='\0';
 	
 	int *semaphore;
-	blockSize = 64;
+	//blockSize = 64;
 	//std::cout<<blockNum<<" "<<blockSize<<std::endl;
 	initsemaphor<<<1, 64>>>(semaphore, blockSize);
-    	cudaDeviceSynchronize();
+    cudaDeviceSynchronize();
+
+
+    //CALCULATION
+
+    //std::cout<<blockNum<<" "<<blockSize<<std::endl;
 	//blockSize_m,blockSize_n,blockNum_m,blockNum_n
 	//threadSolver<<<1, 64>>>(memory,0,0,n,d,e,5,x1,x2,semaphore);
-	helloWorld<<<1,1>>>();	
-
-	//threadSolver(float *memory,long int subM,long int subN, long int const n, float const d, float const e, long int const b_size, char *s1, char *s2, int *semaphore)
+	//helloWorld<<<1,1>>>();	
+    
+	//threadSolver(float *memory,long int subM,long int subN, long int const n, float const d, float const e, long int const b_size, char *s1, char *s2, int *semaphore);
 	/*for(int i=0;i<N;i++)
 	{
 		std::cout<<memory[i]<<" ";
@@ -790,7 +802,8 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	cudaFree(Gd);
 	cudaFree(F);
 	cudaFree(E);
-	
+	cudaFree(semaphore);
+
 	return;
 } 
 
