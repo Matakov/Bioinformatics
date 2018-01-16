@@ -47,3 +47,4 @@ void NeedlemanWunschGPU(std::string const&, std::string const&, double const, do
 
 //void SmithWatermanGPU(std::string const& , std::string const& , double const , double const );
 void SmithWatermanGPU(std::string const& , std::string const& , double const , double const , double const );
+void SmithWatermanGPU_Basic(std::string const&, std::string const&, double const, double const);

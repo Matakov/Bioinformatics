@@ -2,7 +2,7 @@
 #include"utility.h"
 #include <math.h>
 
-#define THREADNUM 4 //axis-wise
+#define THREADNUM 1 //axis-wise
 
 
 // CUDA kernel to add elements of two arrays
@@ -262,7 +262,7 @@ __device__ void initsemaphorDevice(int *semaphore, int N)
     //printf("Izlazim!!!!!!");
     return;
 }
-__global__ void initmemoryHSW(double *memory,double const m,double const n, double const d, double const e, double const N)
+__global__ void initmemoryHSW(float *memory,double const m,double const n, long int const N)
 {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     int stride = blockDim.x * gridDim.x;
@@ -546,7 +546,7 @@ __global__ void SW_GPU(double* memory,long int const m,long int const n, double 
     return;
 }
 
-__global__ void SW_GPU_thread(double* memory,long int const m,long int const n, double const d, double const e, long int const N,const char* s1, const char* s2,int* semaphore)
+__global__ void SW_GPU_thread(float* memory,long int const m,long int const n, double const d, double const e, long int const N,const char* s1, const char* s2,int* semaphore)
 {
     //extern __shared__ int s[];
     //printf("Bez: %d, blockDim: %d, n = %ld\n",(int)n,blockDim.x,n);
@@ -721,16 +721,19 @@ __device__ void threadFunction(float* memory,int subN, int subM, long int n,  in
     int coordx, coordy;
    // printf("U threadFun\n");
    // printf("totalElem: %d, localSubN = %d, localSubM = %d\n",totalElem,localSubN,localSubM);
-
+    double simil;
+    long int position;
     for(int i=0;i<totalElem;i++)
     {
         
         coordx = i % threadSize_n;
         coordy = i / threadSize_n;
-        //double simil;
-        //if(s1[find_index_left(i,n)]==s2[find_index_upper(i,n)]) simil = 1;
-        //else simil = -3;
-        //memory[n * (subM + localSubM + coordy ) + (subN + localSubN + coordx)] = max(,max(-d,max(0,-d)));
+        if((subM+localSubM+coordy) == 0 || (subN + localSubN + coordx) == 0) continue;
+        if(s1[subM+localSubM+coordy-1]==s2[subN + localSubN + coordx-1]) simil = 1;
+        else simil = -3;
+        position = n * (subM + localSubM + coordy ) + (subN + localSubN + coordx);
+        if( subN == 0 && subM == 0 && localSubN==0 && localSubM==0 && coordx==1 && coordy==1) printf("Position: %ld\n",position);
+        memory[position] = max(memory[position-n-1]+simil,max(memory[position-n]-d,max((float)0,memory[position-1]-d)));
         //printf("totalElem: %d, localSubN = %d, localSubM = %d, coordx = %d, coordy = %d\n",totalElem,localSubN,localSubM,coordx,coordy);
         //pristup memorijskom elemntu memory[n * (subM + localSubM + coordy ) + (subN + localSubN + coordx)]
        // if((subN + localSubN + coordx ) < n && ( n * (subM + localSubM + coordy)) < N/n)
@@ -759,8 +762,8 @@ Parameters:
 __global__ void threadSolver(float *memory,int subM,int subN, long int const n, float const d, float const e, int const blockSize_n, char *s1, char *s2, int* semaphore, long int N)
 {
     //printf("subM: %d, subN: %d, n: %ld, d: %f, e: %f \n",subM,subN,n,d,e);
-	int index = (int)((threadIdx.x/THREADNUM) + subM) * n + subN + (threadIdx.x % THREADNUM);
-	long int last = (subM + THREADNUM - 1) * n + subN + THREADNUM - 1;
+	//int index = (int)((threadIdx.x/THREADNUM) + subM) * n + subN + (threadIdx.x % THREADNUM);
+	//long int last = (subM + THREADNUM - 1) * n + subN + THREADNUM - 1;
    // printf("Unutra!! blockid: %d, threadID: %d, index = %d\n",blockIdx.x,threadIdx.x,index);
     
     //number of elements in each axis that one thread will solve
@@ -899,7 +902,7 @@ __global__ void kernelCallsKernel(float *memory,long int const m,long int const 
         if(index==0) 
         {
             //printf("Unutar ifa\n");
-            threadSolver<<<1,4>>>(memory,subM,subN,n,d,e,blockSize_n,s1,s2,semaphoreInside, N);
+            threadSolver<<<1,THREADNUM>>>(memory,subM,subN,n,d,e,blockSize_n,s1,s2,semaphoreInside, N);
             __syncthreads();    
             //cudaDeviceSynchronize();
             //printf("Semafor prije: %d\n",semaphore[(blockIdx.x)%gridDim.x]);
@@ -917,7 +920,7 @@ __global__ void kernelCallsKernel(float *memory,long int const m,long int const 
         {
             //printf("Uso 1. if\n");
             semaphore[(index-1)%gridDim.x]--;
-            threadSolver<<<1,4>>>(memory,subM,subN,n,d,e,blockSize_n,s1,s2,semaphoreInside, N);
+            threadSolver<<<1,THREADNUM>>>(memory,subM,subN,n,d,e,blockSize_n,s1,s2,semaphoreInside, N);
             __syncthreads();
             //cudaDeviceSynchronize();
             //printf("Semafor prije: %d\n",semaphore[(blockIdx.x)%gridDim.x]);
@@ -932,7 +935,7 @@ __global__ void kernelCallsKernel(float *memory,long int const m,long int const 
             //printf(" unutar index>=(int)numBlocks_n && semaphore[(index-1)%gridDim.x]>0 && semaphore[(index-int(numBlocks_n))%gridDim.x]>0 \n");
             semaphore[(index-int(numBlocks_n))%gridDim.x]--;
             semaphore[(index-1)%gridDim.x]--;
-            threadSolver<<<1,4>>>(memory,subM,subN,n,d,e,blockSize_n,s1,s2,semaphoreInside, N);
+            threadSolver<<<1,THREADNUM>>>(memory,subM,subN,n,d,e,blockSize_n,s1,s2,semaphoreInside, N);
             __syncthreads();    
             //cudaDeviceSynchronize();
             //printf("Semafor prije: %d\n",semaphore[(blockIdx.x)%gridDim.x]);
@@ -946,7 +949,7 @@ __global__ void kernelCallsKernel(float *memory,long int const m,long int const 
         {
             //printf(" unutar index%(int)numBlocks_n==0 && semaphore[(index-int(numBlocks_n))%gridDim.x]>0");
             semaphore[(index-int(numBlocks_n))%gridDim.x]--;
-            threadSolver<<<1,4>>>(memory,subM,subN,n,d,e,blockSize_n,s1,s2,semaphoreInside, N);
+            threadSolver<<<1,THREADNUM>>>(memory,subM,subN,n,d,e,blockSize_n,s1,s2,semaphoreInside, N);
             __syncthreads();    
             //cudaDeviceSynchronize();
             //printf("Semafor prije: %d\n",semaphore[(blockIdx.x)%gridDim.x]);
@@ -1064,6 +1067,8 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
     initsemaphor<<<40, blockSize>>>(semaphore, blockNum);
     cudaDeviceSynchronize();
 
+    initmemoryHSW<<<40, blockSize>>>(memory,m,n,N);
+    cudaDeviceSynchronize();
 
     //CALCULATION
     std::cout<<"Calculation started:"<<std::endl;
@@ -1081,6 +1086,16 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	{
 		std::cout<<memory[i]<<" ";
 	}*/
+
+    
+    for(int i=0;i<m;i++)
+    {
+         for(int j=0;j<n;j++)
+         {
+             std::cout<<memory[i*(n)+j]<<" ";  
+         }
+         std::cout<<std::endl;   
+    }
 
 	//memory freeing
 	cudaFree(memory);
@@ -1153,19 +1168,19 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 
 void SmithWatermanGPU_Basic(std::string const& s1, std::string const& s2, double const d, double const e)
  {
-     double *Gi,*Gd,*F,*E;
-     double *memory;
+     float *Gi,*Gd,*F,*E;
+     float *memory;
      char *M;
      long int m = s1.length();
      long int n = s2.length();
      long int N = (s1.length()+1)*(s2.length()+1);
      //long int N_orig = n*m;
-     cudaMallocManaged(&memory, N*sizeof(double));
+     cudaMallocManaged(&memory, N*sizeof(float));
      cudaMallocManaged(&M, N*sizeof(char));
-     cudaMallocManaged(&Gi, N*sizeof(double));
-     cudaMallocManaged(&Gd, N*sizeof(double));
-     cudaMallocManaged(&F, N*sizeof(double));
-     cudaMallocManaged(&E, N*sizeof(double));
+     cudaMallocManaged(&Gi, N*sizeof(float));
+     cudaMallocManaged(&Gd, N*sizeof(float));
+     cudaMallocManaged(&F, N*sizeof(float));
+     cudaMallocManaged(&E, N*sizeof(float));
      
      int blockSize = 1;
      int numBlocks = (N + blockSize - 1) / blockSize;
@@ -1179,7 +1194,7 @@ void SmithWatermanGPU_Basic(std::string const& s1, std::string const& s2, double
      initsemaphor<<<numBlocks, blockSize>>>(semaphore, numBlocks);
      cudaDeviceSynchronize();
  
-     initmemoryHSW<<<numBlocks, blockSize>>>(memory,m+1,n+1,d,e,N);
+     initmemoryHSW<<<numBlocks, blockSize>>>(memory,m+1,n+1,N);
      cudaDeviceSynchronize();
      
      //padding(s1,s2,,);
