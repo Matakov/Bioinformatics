@@ -226,15 +226,39 @@ __global__ void initsemaphor(int *semaphore, int N)
 {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     int stride = blockDim.x * gridDim.x;
-    //printf("Hello from block %d, thread %d, index %d, Memory is %f\n", blockIdx.x, threadIdx.x,index,memory[index]);
+    
    
     for (int i = index; i < N; i += stride)
     {
+            //printf("Hello from block %d, thread %d, i %d, stride: %d, N: %d\n", blockIdx.x, threadIdx.x,i,stride,N);
             semaphore[i]=0;
     }
+    //printf("Izlazim!!!!!!");
     return;
 }
 
+/*
+Authors: Matej Crnac
+
+Parameters:
+    input:  semaphor - pointer to semaphor list
+            n - seamphor length
+    output: - initialised semaphor.
+*/
+__device__ void initsemaphorDevice(int *semaphore, int N)
+{
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    int stride = blockDim.x * gridDim.x;
+    
+   
+    for (int i = index; i < N; i += stride)
+    {
+            //printf("Hello from block %d, thread %d, i %d, stride: %d, N: %d\n", blockIdx.x, threadIdx.x,i,stride,N);
+            semaphore[i]=0;
+    }
+    //printf("Izlazim!!!!!!");
+    return;
+}
 __global__ void initmemoryHSW(double *memory,double const m,double const n, double const d, double const e, double const N)
 {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
@@ -637,7 +661,8 @@ __global__ void threadSolver(float *memory,long int subM,long int subN, long int
 {
 	long int index = (threadIdx.x/b_size + subM) * n + subN + threadIdx.x % b_size;
 	long int last = (subM + b_size - 1) * n + subN + b_size - 1;
-
+    printf("Unutra!! blockid: %d, threadID: %d, index = $d\n",blockIdx.x,threadIdx.x,index);
+    printf("subM: %d, subM: %d\n",subM,subN);
 	/*
 	printf("%ld, %ld",index,last);
 	for(long int i=index;i<last;i += blockDim.x)
@@ -683,15 +708,72 @@ __global__ void threadSolver(float *memory,long int subM,long int subN, long int
 }
 
 //block 
-__global__ void kernelCallsKernel(float *memory,long int const m,long int const n, float const d, float const e, long int N, char *s1, char *s2, int numBlocks)
+__global__ void kernelCallsKernel(float *memory,long int const m,long int const n, float const d, float const e, long int N, char *s1, char *s2, int numBlocks,int numBlocks_m,int numBlocks_n,long int blockSize,int* semaphore)
 {
-    //b_size = n / sqrt(numBlocks);
-    long int subM = blockIdx.x;
-    long int subN;
-    int *semaphore;
+    //long int subM = blockIdx.x;
+    //long int subN;
+    //int *semaphore;
+    //printf("bezzz");
+    //printf("blockid: %d, threadid = %d\n",blockIdx.x,threadIdx.x);
     //initsemaphor(semaphore,blockDim.x);
     //blockIdx.x //određuje blok
-    //threadSolver<<<1,4>>>(memory,subM,subN,n,d,e,b_size,s1,s2,semaphore);
+    //threadSolver<<<2,4>>>(memory,subM,subN,n,d,e,blockSize,s1,s2,semaphore);
+    //return;
+    
+    
+    //extern __shared__ int s[];
+
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    //int stride = blockDim.x * gridDim.x;
+    int subN = blockIdx.x%numBlocks_n;
+    int subM = blockIdx.x/numBlocks_n;
+    printf("subN: %d, subM: %d, index= %d\n",subN,subM,index);
+    //__syncthreads();
+    while(1)
+    {
+        //sprintf("blockID: %d, Vanjski blok\n",blockIdx.x);
+        if(index==0) 
+        {
+            printf("Unutar ifa\n");
+            break;
+        }
+        //if(blockIdx.x<(int)(double)(n-1)/(blockDim.x/2) && semaphore[blockIdx.x-1]==1) break;
+        //if(blockIdx.x>=(int)(double)(n-1)/(blockDim.x/2) && semaphore[blockIdx.x-1]==1 && semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))]==1) break;
+        //if(blockIdx.x%(int)(double)(n-1)/(blockDim.x/2)==0 && semaphore[blockIdx.x-int((double)(n-1)/(blockDim.x/2))]==1) break;
+
+        if(index<(int)numBlocks_n && semaphore[(index-1)%gridDim.x]>0)
+        {
+            printf("Unutar index<(int)numBlocks_n && semaphore[(index-1)%gridDim.x]>0 \n");
+            semaphore[(index-1)%gridDim.x]--;
+            break;
+        }
+        if(index>=(int)numBlocks_n && semaphore[(index-1)%gridDim.x]>0 && semaphore[(index-int(numBlocks_n))%gridDim.x]>0)
+        {
+            printf(" unutar index>=(int)numBlocks_n && semaphore[(index-1)%gridDim.x]>0 && semaphore[(index-int(numBlocks_n))%gridDim.x]>0 \n");
+            semaphore[(index-int(numBlocks_n))%gridDim.x]--;
+            semaphore[(index-1)%gridDim.x]--;
+            break;
+        }
+        if(index%(int)numBlocks_n==0 && semaphore[(index-int(numBlocks_n))%gridDim.x]>0)
+        {
+            printf(" unutar index%(int)numBlocks_n==0 && semaphore[(index-int(numBlocks_n))%gridDim.x]>0");
+            semaphore[(index-int(numBlocks_n))%gridDim.x]--;
+            break;
+        }
+    }
+    __syncthreads();
+    printf("blockID: %d, Vanjski blok\n",blockIdx.x);
+    int *semaphoreInside;
+    semaphoreInside = (int*)malloc(1024*sizeof(int));
+	initsemaphorDevice(semaphoreInside, 1024);
+
+    //cudaDeviceSynchronize();
+    
+    threadSolver<<<1,2>>>(memory,subM,subN,n,d,e,blockSize,s1,s2,semaphoreInside);
+
+    semaphore[(blockIdx.x)%gridDim.x]=2;
+
+
     return;
 } 
 
@@ -704,7 +786,7 @@ __global__ void helloWorld()
 void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const d, double const e, double const B)
 {
     //DATA PREPARATION
-
+    //NAORAVIT PROVJERU VELICINE STRINGOVA
 
 	//input strings are const so we copy
 	std::string string_m(s1);
@@ -766,7 +848,7 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
     	strcpy(x1, cstr);   
     	x1[string_m.length()]='\0';
 	
-    	char* x2 ;// = allocateMemory(string_n);
+    char* x2 ;// = allocateMemory(string_n);
 	
 	const char *cstr2 = string_n.c_str();
 	cudaMallocManaged(&x2, string_n.length()*(sizeof(char)+1));
@@ -776,18 +858,23 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
     	x2[string_n.length()]='\0';
 	
 	int *semaphore;
+    cudaMallocManaged(&semaphore, blockNum*sizeof(int));
 	//blockSize = 64;
 	//std::cout<<blockNum<<" "<<blockSize<<std::endl;
-	initsemaphor<<<1, 64>>>(semaphore, blockSize);
+	initsemaphor<<<1, 2>>>(semaphore, blockNum);
     cudaDeviceSynchronize();
 
 
     //CALCULATION
+    std::cout<<"Calculation started:"<<std::endl;
 
+    kernelCallsKernel<<<2, 1>>>(memory,m,n,d,e,N,x1, x2, blockNum,blockNum_m,blockNum_n,blockSize,semaphore);
+    cudaDeviceSynchronize();
     //std::cout<<blockNum<<" "<<blockSize<<std::endl;
 	//blockSize_m,blockSize_n,blockNum_m,blockNum_n
 	//threadSolver<<<1, 64>>>(memory,0,0,n,d,e,5,x1,x2,semaphore);
 	//helloWorld<<<1,1>>>();	
+    cudaDeviceSynchronize();
     
 	//threadSolver(float *memory,long int subM,long int subN, long int const n, float const d, float const e, long int const b_size, char *s1, char *s2, int *semaphore);
 	/*for(int i=0;i<N;i++)
