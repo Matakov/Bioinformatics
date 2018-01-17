@@ -705,20 +705,20 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 
     float elapsed=0;
     cudaEvent_t start, stop;
-    HANDLE_ERROR(cudaEventCreate(&start));
-    HANDLE_ERROR(cudaEventCreate(&stop));
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
 
-    HANDLE_ERROR( cudaEventRecord(start, 0));
+    cudaEventRecord(start, 0);
     //CALCULATION
     //std::cout<<"Calculation started:"<<std::endl;
     
     kernelCallsKernel<<<blockNum, 1>>>(memory,m,n,m_orig,n_orig,N,x1, x2, blockNum,blockNum_m,blockNum_n,blockSize_n,blockSize_n,threadNumber,threadNumber_m,threadNumber_n,threadSize,threadSize_m,threadSize_n,semaphore,scorer,maxBlock,postionMaxBlock);
     cudaDeviceSynchronize();
-    HANDLE_ERROR(cudaEventRecord(stop, 0));
-    HANDLE_ERROR(cudaEventSynchronize (stop) );
-    HANDLE_ERROR(cudaEventElapsedTime(&elapsed, start, stop) );
-    HANDLE_ERROR(cudaEventDestroy(start));
-    HANDLE_ERROR(cudaEventDestroy(stop));  
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize (stop) ;
+    cudaEventElapsedTime(&elapsed, start, stop) ;
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);  
 
     int maxValue=0;
     int maxPosition=0;
@@ -761,7 +761,7 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
     // show memory usage of GPU
     size_t free_byte ;
     size_t total_byte ;
-    cuda_status = cudaMemGetInfo( &free_byte, &total_byte ) ;
+    cudaError_t cuda_status = cudaMemGetInfo( &free_byte, &total_byte ) ;
     if ( cudaSuccess != cuda_status ){
         printf("Error: cudaMemGetInfo fails, %s \n", cudaGetErrorString(cuda_status) );
         exit(1);
