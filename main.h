@@ -17,11 +17,5 @@
 #include<iterator>
 #include<string>
 
-
-//seqan
-#include <seqan/file.h>
-#include <seqan/sequence.h>
-
-//for importing sequences
-#include <seqan/bam_io.h>
+#include"argparse.hpp"
 

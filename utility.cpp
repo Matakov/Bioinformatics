@@ -11,8 +11,8 @@ typedef struct score {
 Scorer setScorer(int match, int mismatch, int gapOpenPenalty, int gapExtendPenaly)
 {
     Scorer score;
-    score.match = match;
-    score.mismatch = mismatch;
+    score.m = match;
+    score.mm = mismatch;
     score.d = gapOpenPenalty;
     score.e = gapExtendPenaly;
     return score;
@@ -92,9 +92,21 @@ void importFile(std::string filename, std::map<std::string,std::string>& mapData
 
 std::string getSequence(std::string filename)
 {
-    std::map<std::string,std::string> mapData;
-    importFile(filename,mapData);  
-    return mapData.begin()->second;
+    std::cout<<filename<<std::endl;
+    std::string extension = filename.substr(filename.find(".")+1,filename.length()-1);
+    std::cout<<extension<<std::endl;
+    if(extension=="txt")
+    {
+        std::vector<std::string> vector;
+        importFile(filename,vector);
+        return vector[0];
+    }
+    else
+    {
+        std::map<std::string,std::string> mapData;
+        importFile(filename,mapData);  
+        return mapData.begin()->second;
+    }
 }
 
 
@@ -130,8 +142,8 @@ concatenace all map values in a string
 */
 double sim(Scorer score, char a, char b)
 {
-    if(a==b) return score.match;
-    else return score.mismatch;
+    if(a==b) return score.m;
+    else return score.mm;
 }
 
 

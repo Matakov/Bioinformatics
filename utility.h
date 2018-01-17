@@ -14,8 +14,8 @@
 #include<string>
 
 typedef struct score {
-    int match;
-    int mismatch;
+    int m;
+    int mm;
     int d;
     int e;
 } Scorer;

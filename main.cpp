@@ -1,153 +1,45 @@
 #include "main.h"
-#include "utility.h"
 #include "SW.h"
 #include <string>
 
 int main(int argc, const char** argv)
 {
-	/*
-	ArgumentParser parser;
-	
-	parser.addArgument("-f", "--files", 2, true);
-	parser.addArgument("-m", "--mode");
-	parser.addArgument("-o", "--output", true);
-	parser.addFinalArgument("output");
-	
-	parser.parse(argc, argv);
-	
-	//std::string helper = parser.retrieve<std::string>("help"); Usage example
-	
-	std::vector<std::string> data;
-	std::map<std::string,std::string> mapData;
-	std::map<std::string,std::string>::iterator itr=mapData.begin();
-	
-	importFile(argv[1],data);
+    if(argc<3) {std::cout<<"Too few arguments!\nProgram needs to be called like this $./program [FILES FILES] [match] [mismatch] [gap-open] [gap-extend] [max-blocks]"<<std::endl;exit(1);}
+    if(argc>8) {std::cout<<"Too much arguments!\nProgram needs to be called like this $./program [FILES FILES] [match] [mismatch] [gap-open] [gap-extend] [max-blocks]"<<std::endl;exit(1);}
+    int m,mm,d,e;
+    double b;
+    //Default values
+    b = 100;//320;
+    m = 1;
+    mm = -3;
+    d = 2;
+    e = 2;
 
-	importFile(argv[1],mapData);
-	
-	for (itr = mapData.begin(); itr != mapData.end(); ++itr)
-	{
-		std::cout<< itr->first <<  "\t" << itr->second<<std::endl;
-	}
-	std::cout<<std::endl;
-	
-	printVector(data);
+    std::string s1_name;
+    std::string s2_name;
 
-	std::string check;
-	mapToString(mapData, check);
-
-	//std::cout<<check<<std::endl;
-	*/
-	/*
-	int N = 1<<20;
-  	float *x, *y;
-	calculate(x,y,N);
-
-	std::string check = "Hello World\n";
-	char* mem;
-	mem=allocateMemory(check);
-	for(int i=0;i<check.length();++i)
-	{
-		std::cout<<mem[i];
-	}
-	releaseMemory(mem);
-	*/
-
-	//test NM
-	//std::string a = "ATATTA";
-	//std::string b = "ATAT";
-	//double i,j,k,l,s;
-	//std::vector<char> vec;
-	//NeedlemanWunsch(b,b,2,sim,i,j,k,l,s,vec);
-	//std::cout<<a<<" : "<<b<<" "<<i<<" "<<j<<" "<<k<<" "<<l<<" S: "<<s<<std::endl;
-	//std::cout<<"Path: ";
-	//for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
-	//std::cout<<std::endl;
-	//printAlignment(b,a,vec);
-
-	float *memory;
-	//std::string a = "GATCAGTTCATCCTTTAGCTTTGGAGGCT";
-	//std::string b = "GAAGAAGTGCTTACAGGC";
-	//std::string a = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAAT";
-	//std::string b = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAAT";
-	/*
-	memory=allocateMatrixMemory(a,b);
-	std::cout<<"Memory allocated: "<<memory<<std::endl;
-	std::cout<<"Location of a memory: "<<&memory<<std::endl;
-	initialize(&memory,-2,(a.length()+1),(b.length()+1),(int)(a.length()+1) * (b.length()+1));
-	std::cout<<"Memory initialized"<<std::endl;
-	std::cout<<(a.length()+1) * (b.length()+1)<<std::endl;
-	std::cout<<"Memory address: "<<memory<<std::endl;
-	
-	for(int i=0;i<(a.length()+1) * (b.length()+1);i++)
-	{
-		std::cout<<*(memory)<<" ";
-		if(i%(b.length()+1)==0)
-		{
-			std::cout<<std::endl;
-		}
-	}
-	*/
-	
-	
-	//memory = allocateMatrixMemoryCPU(a,b);
-	/*
-	memory = initializeMemoryMatrixCPU(a,b,2);
-		
-	for(int i=0;i<(a.length()+1);i++)
-	{
-		for(int j=0;j<(b.length()+1);j++)
-		{
-			std::cout<<memory[i*(b.length()+1)+j]<<" ";
-		}
-		std::cout<<std::endl;
-	}
-	
-	std::cout<<memory<<std::endl;
-	free(memory);
-	return 0;
-	*/
-	std::string a = "TGTTACGG";
-	std::string b = "GGTTGACTA";
-	double i,j,k,l,s;
-	std::vector<char> vec;
-	//NeedlemanWunsch(a,b,2,sim,i,j,k,l,s,vec);
-	//std::cout<<a<<" : "<<b<<" "<<i<<" "<<j<<" "<<k<<" "<<l<<" S: "<<s<<std::endl;
-	//std::cout<<"Path: ";
-	//for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
-	//std::cout<<std::endl;
-	//printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
-
-	//SmithWaterman(a,b,2,sim,i,j,k,l,s,vec);
-	//std::cout<<a<<" : "<<b<<" "<<i<<" "<<j<<" "<<k<<" "<<l<<" S: "<<s<<std::endl;
-	//std::cout<<"Path: ";
-	//for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
-	//std::cout<<std::endl;
-	//printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
-	//Hirschberg(a,b,a.length(),b.length(),-2,-2,sim,0,0,vec);
-	//std::cout<<"Path: ";
-	//for(int z=0;z<vec.size();z++) std::cout<<vec[z]<<" ";
-	//std::cout<<std::endl;
-	//printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
-	//NeedlemanWunschGPU(a,b,2,2,sim);
-	//SmithWatermanGPU(a,b,2,2);
-	SmithWatermanGPU(a,b,2,2,100);
-    //SmithWatermanGPU_Basic(a,b,2,2);
-
-    Scorer scorer = setScorer(1,-3,-2,-2);
-    std::cout<<scorer.match<<std::endl;
-    std::cout<<scorer.mismatch<<std::endl;
-    std::cout<<scorer.d<<std::endl;
-    std::cout<<scorer.e<<std::endl;
-
-    std::cout<<sim(scorer,'a','a')<<std::endl;
-        
-    std::string s1 = getSequence(argv[1]);
+    for(int k=1;k<argc;k++)
+    {
+        if(k==1) s1_name=argv[k];
+        if(k==2) s2_name=argv[k];   
+        if(k==3) m=atoi(argv[k]);
+        if(k==4) mm=atoi(argv[k]);
+        if(k==5) d=atoi(argv[k]);
+        if(k==6) e=atoi(argv[k]);
+        if(k==7) b=atoi(argv[k]);  
+    }
+    std::cout<<argv[argc-1]<<std::endl;
+    std::cout<<s1_name<<std::endl;
+    std::cout<<s2_name<<std::endl;
+    std::string s1 = getSequence(s1_name);
+    std::string s2 = getSequence(s2_name);
+    
     std::cout<<s1<<std::endl;
+    std::cout<<s2<<std::endl;
+
+    Scorer scorer = setScorer(m,mm,d,e);
+    SmithWatermanGPU(s1,s2,b,scorer);   
 
     return 0;
-	
+    
 }
-
-
-
