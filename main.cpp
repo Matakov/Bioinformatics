@@ -131,7 +131,7 @@ int main(int argc, const char** argv)
 	//printAlignment(a,b,vec,(int)i,(int)j,(int)k,(int)l);
 	//NeedlemanWunschGPU(a,b,2,2,sim);
 	//SmithWatermanGPU(a,b,2,2);
-	SmithWatermanGPU(a,b,2,2,20);
+	SmithWatermanGPU(a,b,2,2,100);
     //SmithWatermanGPU_Basic(a,b,2,2);	
     return 0;
 	
