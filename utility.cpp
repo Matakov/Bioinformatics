@@ -1,7 +1,7 @@
 #include "utility.h"
 
-/*
-typedef struct score {
+
+/*typedef struct score {
     int match;
     int mismatch;
     int d;
@@ -11,8 +11,8 @@ typedef struct score {
 Scorer setScorer(int match, int mismatch, int gapOpenPenalty, int gapExtendPenaly)
 {
     Scorer score;
-    score.match = match;
-    score.mismatch = mismatch;
+    score.m = match;
+    score.mm = mismatch;
     score.d = gapOpenPenalty;
     score.e = gapExtendPenaly;
     return score;
@@ -145,8 +145,8 @@ Take chars from a file and return matching value
 */
 double sim(Scorer score, char a, char b)
 {
-    if(a==b) return score.match;
-    else return score.mismatch;
+    if(a==b) return score.m;
+    else return score.mm;
 }
 
 
@@ -208,7 +208,7 @@ Output parameters:
         - pe  - path for alignment
 */
 
-void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*sim)(Scorer,char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
+void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*sim)(Scorer,char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe, Scorer scorer)
 {
 	//initialization
 	int m=s1.length()+1;
@@ -260,7 +260,7 @@ void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*
 
 			f = std::max(H[i-1][j]-d,F[i-1][j]-e);
 			en = std::max(H[i][j-1]-d,E[i][j-1]-e);
-			h = H[i-1][j-1] + sim(s1[i-1],s2[j-1]);
+			h = H[i-1][j-1] + sim(scorer,s1[i-1],s2[j-1]);
 			if (f==(F[i-1][j]-en)) Gd[i][j] = Gd[i-1][j]+1;
 			if (f==(E[i][j-1]-en)) Gi[i][j] = Gi[i][j-1]+1;
 			H[i][j]=maxFun(f,en,h);
@@ -322,7 +322,7 @@ Output parameters:
         - s  - alignment score
         - pe  - path for alignment
 */
-void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*sim)(Scorer,char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
+void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*sim)(Scorer,char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe, Scorer scorer)
 {
     //initialization
     int m=s1.length()+1;
@@ -377,7 +377,7 @@ void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*si
 
             f = std::max(H[i-1][j]-d,F[i-1][j]-e);
             en = std::max(H[i][j-1]-d,E[i][j-1]-e);
-            h = H[i-1][j-1] + sim(s1[i-1],s2[j-1]);
+            h = H[i-1][j-1] + sim(scorer,s1[i-1],s2[j-1]);
             if (f==(F[i-1][j]-en)) Gd[i][j] = Gd[i-1][j]+1;
             if (f==(E[i][j-1]-en)) Gi[i][j] = Gi[i][j-1]+1;
             temp = maxFun(f,en,h);
@@ -556,24 +556,24 @@ void printAlignment(std::vector<std::tuple<char,char,char>> vector)
     std::vector<char> s1_alignment;
     std::vector<char> s2_alignment;
     std::tuple<char,char,char> temp;
-    for(int i=0;i<vector.length();i++)
+    for(int i=0;i<vector.size();i++)
     {
         temp = vector[i];
-        alignment.push_back(temp[0]);
-        s1_alignment.push_back(temp[1]);
-        s2_alignment.push_back(temp[2]);
+        alignment.push_back(std::get<0>(temp));
+        s1_alignment.push_back(std::get<1>(temp));
+        s2_alignment.push_back(std::get<2>(temp));
     }
-    for(int i=0;i<alignment.length();i++)
+    for(int i=0;i<alignment.size();i++)
     {
         std::cout<<alignment[i]<<" ";
     }
     std::cout<<std::endl;
-    for(int i=0;i<s1_alignment.length();i++)
+    for(int i=0;i<s1_alignment.size();i++)
     {
         std::cout<<s1_alignment[i]<<" ";
     }
     std::cout<<std::endl;
-    for(int i=0;i<s2_alignment.length();i++)
+    for(int i=0;i<s2_alignment.size();i++)
     {
         std::cout<<s2_alignment[i]<<" ";
     }
@@ -604,20 +604,20 @@ std::vector<std::tuple<char,char,char>> pathReconstruction(int* memory,const int
         maxValue = maxFun(l,u,ul);
         if(maxValue == ul)
         {
-            p.insert(p.begin(),std::tuple<'m',s1[i],s2[j]>);
+            p.insert(p.begin(),std::make_tuple('m',s1[i],s2[j]));
             i--;
             j--;
         }
-        if(maxValue==u)
+        else if(maxValue==u)
         {
             //p.insert(p.begin(),'d');//Gi[i][j]+1);
-            p.insert(p.begin(),std::tuple<'d',s2[j],'-'>);
+            p.insert(p.begin(),std::make_tuple('d','-',s2[j]));
             i = i - 1;  //- Gi[i][j] - 1;
         }
-        if(maxValue==l)
+        else if(maxValue==l)
         {
             //p.insert(p.begin(),'i');
-            p.insert(p.begin(),std::tuple<'i','-',s1[i]>);
+            p.insert(p.begin(),std::make_tuple('i',s1[i],'-'));
             j = j - 1; //- Gd[i][j] - 1;
         }
     }

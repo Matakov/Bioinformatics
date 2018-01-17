@@ -250,7 +250,7 @@ __global__ void NW_GPU(double* memory,long int const m,long int const n, double 
             double simil;
             if(s1[find_index_left(i,n)]==s2[find_index_upper(i,n)]) simil = 1;
             else simil = -3;
-            emory[i]=max(memory[i-n-1]+simil,max(memory[i-n] - d,memory[i-1] - d));
+            memory[i]=max(memory[i-n-1]+simil,max(memory[i-n] - d,memory[i-1] - d));
         }
     }
     
@@ -352,9 +352,10 @@ __device__ void threadFunction(int* memory,int subN, int subM,  int n, int m_ori
     int coordx, coordy;
     int simil;
     int position;
+
     for(int i=0;i<totalElem;i++)
     {
-        
+        __syncthreads();
         coordx = i % (int)threadSize_n;
         coordy = i / (int)threadSize_n;
         if((subM+localSubM+coordy) == 0 || (subN + localSubN + coordx) == 0) continue;
@@ -363,11 +364,11 @@ __device__ void threadFunction(int* memory,int subN, int subM,  int n, int m_ori
         int m_position = subM*blockSize_n+localSubM*threadSize_m+coordy;
         if(n_position >= n_orig || m_position >= m_orig) continue;
 
-        if(s1[subM*blockSize_n+localSubM*threadSize_m+coordy-1]==s2[subN*blockSize_n + localSubN*threadSize_n + coordx-1]) simil = score.m;
-        else simil = score.mm;
+        if(s1[subM*blockSize_n+localSubM*threadSize_m+coordy-1]==s2[subN*blockSize_n + localSubN*threadSize_n + coordx-1]) simil = 1;//score.m;
+        else simil = -3;//score.mm;
         position = (int)n * ((int)subM*(int)blockSize_n + (int)localSubM*(int)threadSize_m + coordy ) + ((int)subN*(int)blockSize_n + (int)localSubN*(int)threadSize_n + coordx);
 
-        int newScore = (int)max(memory[position-n-1]+simil,max(memory[position-n]-(int)score.d,max(0,memory[position-1]-(int)score.d)));
+        int newScore = (int)max(memory[position-n-1]+(int)simil,max(memory[position-n]-(int)score.d,max(0,memory[position-1]-(int)score.d)));
         memory[position] = newScore;
 
         if(newScore > maxBlockInside[threadIdx.x])
@@ -376,8 +377,10 @@ __device__ void threadFunction(int* memory,int subN, int subM,  int n, int m_ori
             maxBlockInside[threadIdx.x]=newScore;
             positionmaxBlockInside[threadIdx.x]=position;
             
-        }      
+        }
+
     }
+
     return;
 }
 
@@ -416,13 +419,17 @@ __global__ void threadSolver(int *memory,int subM,int subN, int const n, int con
     int localSubN = (threadIdx.x % (int)threadNumber_n);
     int localSubM = (threadIdx.x / (int)threadNumber_n);
     int flag = 1;
+
+    __syncthreads();
     while(flag==1){
+
         if(threadIdx.x==0){
             threadFunction(memory,subN,subM,n,m_orig,n_orig,localSubN,localSubM,blockSize_n,threadSize,threadSize_m,threadSize_n, N,s1,s2,scorer,maxBlockInside,positionmaxBlockInside,threadNumber);
             semaphore[(threadIdx.x)%(int)threadNumber]=2;
             flag = 0;
             break;
         }
+
         if(threadIdx.x<(int)threadNumber_n && semaphore[(threadIdx.x-1)%(int)threadNumber]>0)
         {
             threadFunction(memory,subN,subM,n,m_orig,n_orig,localSubN,localSubM,blockSize_n,threadSize,threadSize_m,threadSize_n, N,s1,s2,scorer,maxBlockInside,positionmaxBlockInside,threadNumber);
@@ -441,6 +448,7 @@ __global__ void threadSolver(int *memory,int subM,int subN, int const n, int con
             flag = 0;
             break;
         }
+        __syncthreads();
         if(threadIdx.x%(int)threadNumber_n==0 && semaphore[(threadIdx.x-int(threadNumber_n))%(int)threadNumber]>0)
         {
             threadFunction(memory,subN,subM,n,m_orig,n_orig,localSubN,localSubM,blockSize_n,threadSize,threadSize_m,threadSize_n, N,s1,s2,scorer,maxBlockInside,positionmaxBlockInside,threadNumber);
@@ -504,7 +512,8 @@ __global__ void kernelCallsKernel(int *memory, int const m, int const n, int con
 	initsemaphorDevice(maxBlockInside, (int)threadNumber);
     positionmaxBlockInside = (int*)malloc((int)threadNumber*sizeof(int));
 	initsemaphorDevice(positionmaxBlockInside, (int)threadNumber);
-
+    
+    cudaDeviceSynchronize();
     while(1)
     {
         if(index==0) 
@@ -595,8 +604,8 @@ output: - alignment of sequence 1 and sequence 2
 void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const B, Scorer scorer)
 {
 
-	std::string string_m(s1);
-	std::string string_n(s2);
+	std::string string_n(s1);
+	std::string string_m(s2);
 
 	//memory locations 
 	int *memory;
@@ -700,20 +709,26 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
     	cudaDeviceSynchronize();
 
     	int maxValue=0;
-    	int maxPosition;
-    
+    	int maxPosition=0;
+        int currentValue;    
     	for(int i=0;i<m;i++)
     	{
-		for(int j=0;j<n;j++)
-		{
-			std::cout<<memory[i*(n)+j]<<" ";  
-		}
-		std::cout<<std::endl;   
+		    for(int j=0;j<n;j++)
+		    {
+                currentValue = memory[i*(n)+j];
+                if (currentValue > maxValue)
+                {
+                    maxValue = currentValue;
+                    maxPosition = i*(n)+j;
+                }
+			    std::cout<<currentValue<<" ";  
+		    }
+		    std::cout<<std::endl;   
     	}
 	std::cout<<std::endl;
 	std::cout<<std::endl;
-	std::cout<<"blockNum "<<blockNum<<std::endl;
-	for(int z=0;z<blockNum;z++)
+	//std::cout<<"blockNum "<<blockNum<<std::endl;
+	/*for(int z=0;z<blockNum;z++)
 	{
 		std::cout<<maxBlock[z]<<" ";
 		if(maxBlock[z]>maxValue)
@@ -723,11 +738,14 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 		    maxPosition=postionMaxBlock[z];
 		}
 	}
-	std::cout<<std::endl;
+	std::cout<<std::endl;*/
 
 	std::cout<<"Max value: "<<maxValue<<" ,position: "<<maxPosition<<std::endl;
 
-	std::cout<<"from memory "<<memory[maxPosition]<<std::endl;        
+
+    std::vector<std::tuple<char,char,char>> alig = pathReconstruction(memory,maxPosition,n_orig,s1,s2);
+    printAlignment(alig);
+       
 	//memory freeing
 	cudaFree(memory);
 	cudaFree(M);

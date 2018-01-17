@@ -42,12 +42,12 @@ std::vector<std::tuple<char,char,char>> pathReconstruction(int* ,const int& , co
 void printAlignment(std::string const& ,std::string const& ,std::vector<char> const& , int, int, int, int);
 void printAlignment(std::vector<std::tuple<char,char,char>> vector);
 
-void NeedlemanWunsch(std::string& , std::string& , double , double (*)(char,char), double& ,double& ,double& , double& ,double& ,std::vector<char>& );
+void NeedlemanWunsch(std::string& , std::string& , double , double (*)(char,char), double& ,double& ,double& , double& ,double& ,std::vector<char>& ,Scorer);
 
 
 void NWG(std::string& , std::string& , double , double (*)(char,char), double& ,int ,int ,int ,int ,double& ,double& , double& ,double& ,std::vector<char>& );
 
-void SmithWaterman(std::string&, std::string&, double, double (*)(char,char), double&, double&, double&, double&, double&, std::vector<char>&);
+void SmithWaterman(std::string&, std::string&, double, double (*)(char,char), double&, double&, double&, double&, double&, std::vector<char>&,Scorer);
 
 
 void Hirschberg(std::string&, std::string&, int, int, int, int, double (*)(char,char), int, int, std::vector<char>&);
