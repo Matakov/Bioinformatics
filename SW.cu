@@ -743,7 +743,7 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	std::cout<<"Max value: "<<maxValue<<" ,position: "<<maxPosition<<std::endl;
 
 
-    std::vector<std::tuple<char,char,char>> alig = pathReconstruction(memory,maxPosition,n_orig,s1,s2);
+    std::vector<std::tuple<char,char,char>> alig = pathReconstruction(memory,maxPosition,n,s2,s1);
     printAlignment(alig);
        
 	//memory freeing

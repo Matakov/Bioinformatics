@@ -593,6 +593,7 @@ std::vector<std::tuple<char,char,char>> pathReconstruction(int* memory,const int
 {
     int i=position/row;
     int j=position%row;
+    printf("i %d, j %d\n",i,j);
     int u,l,ul,maxValue;
     //std::vector<char> p;
     std::vector<std::tuple<char,char,char>> p;
@@ -604,20 +605,20 @@ std::vector<std::tuple<char,char,char>> pathReconstruction(int* memory,const int
         maxValue = maxFun(l,u,ul);
         if(maxValue == ul)
         {
-            p.insert(p.begin(),std::make_tuple('m',s1[i],s2[j]));
+            p.insert(p.begin(),std::make_tuple('m',s1[i-1],s2[j-1]));
             i--;
             j--;
         }
         else if(maxValue==u)
         {
             //p.insert(p.begin(),'d');//Gi[i][j]+1);
-            p.insert(p.begin(),std::make_tuple('d','-',s2[j]));
+            p.insert(p.begin(),std::make_tuple('d','-',s2[j-1]));
             i = i - 1;  //- Gi[i][j] - 1;
         }
         else if(maxValue==l)
         {
             //p.insert(p.begin(),'i');
-            p.insert(p.begin(),std::make_tuple('i',s1[i],'-'));
+            p.insert(p.begin(),std::make_tuple('i',s1[i-1],'-'));
             j = j - 1; //- Gd[i][j] - 1;
         }
     }
