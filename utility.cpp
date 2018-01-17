@@ -1,5 +1,22 @@
 #include "utility.h"
 
+/*
+typedef struct score {
+    int match;
+    int mismatch;
+    int d;
+    int e;
+} Scorer;
+*/
+Scorer setScorer(int match, int mismatch, int gapOpenPenalty, int gapExtendPenaly)
+{
+    Scorer score;
+    score.match = match;
+    score.mismatch = mismatch;
+    score.d = gapOpenPenalty;
+    score.e = gapExtendPenaly;
+    return score;
+}
 
 /*
 Authors: Franjo Matkovic
@@ -73,6 +90,14 @@ void importFile(std::string filename, std::map<std::string,std::string>& mapData
 }
 
 
+std::string getSequence(std::string filename)
+{
+    std::map<std::string,std::string> mapData;
+    importFile(filename,mapData);  
+    return mapData.begin()->second;
+}
+
+
 void printVector(std::vector<std::string>& container)
 {
     for(int i=0;i<container.size();i++)
@@ -103,11 +128,12 @@ Authors: Franjo Matkovic
 
 concatenace all map values in a string
 */
-double sim(char a, char b)
+double sim(Scorer score, char a, char b)
 {
-    if(a==b) return 1;
-    else return -3;
+    if(a==b) return score.match;
+    else return score.mismatch;
 }
+
 
 
 /*

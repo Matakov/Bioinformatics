@@ -13,6 +13,12 @@
 #include<iterator>
 #include<string>
 
+typedef struct score {
+    int match;
+    int mismatch;
+    int d;
+    int e;
+} Scorer;
 
 void importFile(std::string, std::vector<std::string>&);
 void importFile(std::string, std::map<std::string,std::string>&);
@@ -23,7 +29,7 @@ void mapToString( const std::map<std::string,std::string>&, std::string&);
 
 double maxFun(double , double ,double);
 
-double sim(char , char );
+double sim(Scorer, char , char );
 
 void NeedlemanWunsch(std::string& , std::string& , double , double (*)(char,char), double& ,double& ,double& , double& ,double& ,std::vector<char>& );
 
@@ -46,3 +52,9 @@ void BHirschberg(std::string&, std::string&, int, int,  int, int, double (*)(cha
 void DHirschberg(std::string&, std::string&, int, int,  int, int, double (*)(char,char),int, int, int, int, int, std::vector<char>&); 
 
 void UHirschberg(std::string&, std::string&, int, int,  int, int, double (*)(char,char),int, int, int, int, int, double, std::vector<char>&);
+
+
+
+Scorer setScorer(int , int , int , int );
+
+std::string getSequence(std::string);

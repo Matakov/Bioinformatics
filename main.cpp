@@ -132,7 +132,19 @@ int main(int argc, const char** argv)
 	//NeedlemanWunschGPU(a,b,2,2,sim);
 	//SmithWatermanGPU(a,b,2,2);
 	SmithWatermanGPU(a,b,2,2,100);
-    //SmithWatermanGPU_Basic(a,b,2,2);	
+    //SmithWatermanGPU_Basic(a,b,2,2);
+
+    Scorer scorer = setScorer(1,-3,-2,-2);
+    std::cout<<scorer.match<<std::endl;
+    std::cout<<scorer.mismatch<<std::endl;
+    std::cout<<scorer.d<<std::endl;
+    std::cout<<scorer.e<<std::endl;
+
+    std::cout<<sim(scorer,'a','a')<<std::endl;
+        
+    std::string s1 = getSequence(argv[1]);
+    std::cout<<s1<<std::endl;
+
     return 0;
 	
 }
