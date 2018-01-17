@@ -736,7 +736,7 @@ __device__ void threadFunction(float* memory,int subN, int subM, long int n,long
 
         if(s1[subM*blockSize_n+localSubM*threadSize_m+coordy-1]==s2[subN*blockSize_n + localSubN*threadSize_n + coordx-1]) simil = 1;
         else simil = -3;
-        position = (int)n * ((int)subM*blockSize_n + (int)localSubM*threadSize_m + coordy ) + ((int)subN*blockSize_n + (int)localSubN*threadSize_n + coordx);
+        position = (int)n * ((int)subM*(int)blockSize_n + (int)localSubM*(int)threadSize_m + coordy ) + ((int)subN*(int)blockSize_n + (int)localSubN*(int)threadSize_n + coordx);
         //printf("Position: %d\n",position);
         memory[position] = max(memory[position-n-1]+simil,max(memory[position-n]-d,max((float)0,memory[position-1]-d)));
         //printf("totalElem: %d, localSubN = %d, localSubM = %d, coordx = %d, coordy = %d\n",totalElem,localSubN,localSubM,coordx,coordy);
@@ -794,10 +794,11 @@ __global__ void threadSolver(float *memory,int subM,int subN, long int const n, 
         if(threadIdx.x<(int)threadNumber_n && semaphore[(threadIdx.x-1)%(int)threadNumber]>0)
         {
             //printf("Unutar unutarnjeg 2. ifa!!!\n");
-	        semaphore[(threadIdx.x-1)%(int)threadNumber]--;
+	        
             //printf("SemaphoreInside = %d\n",semaphore[(threadIdx.x-1)%(int)pow(THREADNUM,2)]);
 	       // printf("Izaso iz whilea\n");
             threadFunction(memory,subN,subM,n,m_orig,n_orig,localSubN,localSubM,blockSize_n,threadSize,threadSize_m,threadSize_n,d,e, N,s1,s2 );
+            semaphore[(threadIdx.x-1)%(int)threadNumber]--;
             semaphore[(threadIdx.x)%(int)threadNumber]=2;
             flag = 0;
             break;
@@ -806,10 +807,11 @@ __global__ void threadSolver(float *memory,int subM,int subN, long int const n, 
         if(threadIdx.x>=(int)threadNumber_n && semaphore[(threadIdx.x-1)%(int)threadNumber]>0 && semaphore[(threadIdx.x-int(threadNumber_n))%(int)threadNumber]>0)
         {
            // printf("Unutar unutarnjeg 3, ifa!!!\n");
-	        semaphore[(threadIdx.x-int(threadNumber_n))%(int)threadNumber]--;
-	        semaphore[(threadIdx.x-1)%(int)threadNumber]--;
+	        
 	       // printf("Izaso iz whilea\n");
             threadFunction(memory,subN,subM,n,m_orig,n_orig,localSubN,localSubM,blockSize_n,threadSize,threadSize_m,threadSize_n,d,e, N,s1,s2 );
+            semaphore[(threadIdx.x-int(threadNumber_n))%(int)threadNumber]--;
+	        semaphore[(threadIdx.x-1)%(int)threadNumber]--;
             semaphore[(threadIdx.x)%(int)threadNumber]=2;
             flag = 0;
             break;
@@ -817,9 +819,10 @@ __global__ void threadSolver(float *memory,int subM,int subN, long int const n, 
         if(threadIdx.x%(int)threadNumber_n==0 && semaphore[(threadIdx.x-int(threadNumber_n))%(int)threadNumber]>0)
         {
             //printf("Unutar unutarnjeg 4, ifa!!!\n");
-	        semaphore[(threadIdx.x-int(threadNumber_n))%(int)threadNumber]--;
+	        
 	        //printf("Izaso iz whilea\n");
             threadFunction(memory,subN,subM,n,m_orig,n_orig,localSubN,localSubM,blockSize_n,threadSize,threadSize_m,threadSize_n,d,e, N,s1,s2 );
+            semaphore[(threadIdx.x-int(threadNumber_n))%(int)threadNumber]--;
             semaphore[(threadIdx.x)%(int)threadNumber]=2;
             flag = 0;
             break;
@@ -926,13 +929,15 @@ __global__ void kernelCallsKernel(float *memory,long int const m,long int const 
         if(index<(int)numBlocks_n && semaphore[(index-1)%gridDim.x]>0)
         {
             //printf("Uso 1. if\n");
-            semaphore[(index-1)%gridDim.x]--;
+            
             threadSolver<<<1,threadNumber>>>(memory,subM,subN,n,m_orig,n_orig,d,e,blockSize_m,blockSize_n,threadNumber,threadNumber_m,threadNumber_n,threadSize,threadSize_m,threadSize_n,s1,s2,semaphoreInside, N);
+            semaphore[(index-1)%gridDim.x]--;
             __syncthreads();
             //cudaDeviceSynchronize();
             //printf("Semafor prije: %d\n",semaphore[(blockIdx.x)%gridDim.x]);
             //cudaDeviceSynchronize();
             //printf("blockIdx.x: %d , gridDim.x = %d, (blockIdx.x)MODgridDim.x  = %d\n",blockIdx.x,gridDim.x,(blockIdx.x)%gridDim.x);
+            
             semaphore[(blockIdx.x)%gridDim.x]=2;
             //printf("Semafor poslje: %d\n",semaphore[(blockIdx.x)%gridDim.x]);
             break;
@@ -940,14 +945,16 @@ __global__ void kernelCallsKernel(float *memory,long int const m,long int const 
         if(index>=(int)numBlocks_n && semaphore[(index-1)%gridDim.x]>0 && semaphore[(index-int(numBlocks_n))%gridDim.x]>0)
         {
             //printf(" unutar index>=(int)numBlocks_n && semaphore[(index-1)%gridDim.x]>0 && semaphore[(index-int(numBlocks_n))%gridDim.x]>0 \n");
+            
+            threadSolver<<<1,threadNumber>>>(memory,subM,subN,n,m_orig,n_orig,d,e,blockSize_m,blockSize_n,threadNumber,threadNumber_m,threadNumber_n,threadSize,threadSize_m,threadSize_n,s1,s2,semaphoreInside, N);    
             semaphore[(index-int(numBlocks_n))%gridDim.x]--;
             semaphore[(index-1)%gridDim.x]--;
-            threadSolver<<<1,threadNumber>>>(memory,subM,subN,n,m_orig,n_orig,d,e,blockSize_m,blockSize_n,threadNumber,threadNumber_m,threadNumber_n,threadSize,threadSize_m,threadSize_n,s1,s2,semaphoreInside, N);
             __syncthreads();    
             //cudaDeviceSynchronize();
             //printf("Semafor prije: %d\n",semaphore[(blockIdx.x)%gridDim.x]);
             //cudaDeviceSynchronize();
             //printf("blockIdx.x: %d , gridDim.x = %d, (blockIdx.x)MODgridDim.x  = %d\n",blockIdx.x,gridDim.x,(blockIdx.x)%gridDim.x);
+            
             semaphore[(blockIdx.x)%gridDim.x]=2;
             //printf("Semafor poslje: %d\n",semaphore[(blockIdx.x)%gridDim.x]);
             break;
@@ -955,13 +962,15 @@ __global__ void kernelCallsKernel(float *memory,long int const m,long int const 
         if(index%(int)numBlocks_n==0 && semaphore[(index-int(numBlocks_n))%gridDim.x]>0)
         {
             //printf(" unutar index%(int)numBlocks_n==0 && semaphore[(index-int(numBlocks_n))%gridDim.x]>0");
-            semaphore[(index-int(numBlocks_n))%gridDim.x]--;
+            
             threadSolver<<<1,threadNumber>>>(memory,subM,subN,n,m_orig,n_orig,d,e,blockSize_m,blockSize_n,threadNumber,threadNumber_m,threadNumber_n,threadSize,threadSize_m,threadSize_n,s1,s2,semaphoreInside, N);
+            semaphore[(index-int(numBlocks_n))%gridDim.x]--;
             __syncthreads();    
             //cudaDeviceSynchronize();
             //printf("Semafor prije: %d\n",semaphore[(blockIdx.x)%gridDim.x]);
             //cudaDeviceSynchronize();
             //printf("blockIdx.x: %d , gridDim.x = %d, (blockIdx.x)MODgridDim.x  = %d\n",blockIdx.x,gridDim.x,(blockIdx.x)%gridDim.x);
+            
             semaphore[(blockIdx.x)%gridDim.x]=2;
             //printf("Semafor poslje: %d\n",semaphore[(blockIdx.x)%gridDim.x]);
             break;

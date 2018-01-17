@@ -66,8 +66,8 @@ int main(int argc, const char** argv)
 	//printAlignment(b,a,vec);
 
 	float *memory;
-	std::string a = "GATCAGTTCATCCTTTAGCTTTGGAGGCT";
-	std::string b = "GAAGAAGTGCTTACAGGC";
+	//std::string a = "GATCAGTTCATCCTTTAGCTTTGGAGGCT";
+	//std::string b = "GAAGAAGTGCTTACAGGC";
 	//std::string a = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAAT";
 	//std::string b = "ATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATATTAATATTAATATTAATATTAATATTAATATTAATATTAATATTAAT";
 	/*
@@ -107,8 +107,8 @@ int main(int argc, const char** argv)
 	free(memory);
 	return 0;
 	*/
-	//std::string a = "TGTTACGG";
-	//std::string b = "GGTTGACTA";
+	std::string a = "TGTTACGG";
+	std::string b = "GGTTGACTA";
 	double i,j,k,l,s;
 	std::vector<char> vec;
 	//NeedlemanWunsch(a,b,2,sim,i,j,k,l,s,vec);
