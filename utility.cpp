@@ -545,6 +545,41 @@ void padding(std::string& a, std::string& b, int M, int N)
         }
     }
 }
+/*
+Authors: Franjo Matković, Dario Sitnik
+
+input parameters:   - alignment vector
+*/
+void printAlignment(std::vector<std::tuple<char,char,char>> vector)
+{
+    std::vector<char> alignment;
+    std::vector<char> s1_alignment;
+    std::vector<char> s2_alignment;
+    std::tuple<char,char,char> temp;
+    for(int i=0;i<vector.length();i++)
+    {
+        temp = vector[i];
+        alignment.push_back(temp[0]);
+        s1_alignment.push_back(temp[1]);
+        s2_alignment.push_back(temp[2]);
+    }
+    for(int i=0;i<alignment.length();i++)
+    {
+        std::cout<<alignment[i]<<" ";
+    }
+    std::cout<<std::endl;
+    for(int i=0;i<s1_alignment.length();i++)
+    {
+        std::cout<<s1_alignment[i]<<" ";
+    }
+    std::cout<<std::endl;
+    for(int i=0;i<s2_alignment.length();i++)
+    {
+        std::cout<<s2_alignment[i]<<" ";
+    }
+    std::cout<<std::endl;
+    return;
+}
 
 /*
 Authors: Franjo Matković, Dario Sitnik
@@ -554,12 +589,13 @@ input parameters:   - memory pointer
                     - memory 
 output parameters:  - vector containing optimal path
 */
-std::vector<char> pathReconstruction(int* memory,const int& position, const int& row)
+std::vector<std::tuple<char,char,char>> pathReconstruction(int* memory,const int& position, const int& row,const std::string& s1, const std::string& s2)
 {
-    int i=m;
-    int j=n;
+    int i=position/row;
+    int j=position%row;
     int u,l,ul,maxValue;
-    std::vector<char> p;
+    //std::vector<char> p;
+    std::vector<std::tuple<char,char,char>> p;
     while(memory[i*row+j]!=0)
     {
         l  = memory[i*row+j - 1];
@@ -568,18 +604,20 @@ std::vector<char> pathReconstruction(int* memory,const int& position, const int&
         maxValue = maxFun(l,u,ul);
         if(maxValue == ul)
         {
-            p.insert(p.begin(),'m');
+            p.insert(p.begin(),std::tuple<'m',s1[i],s2[j]>);
             i--;
             j--;
         }
         if(maxValue==u)
         {
-            p.insert(p.begin(),'d');//Gi[i][j]+1);
+            //p.insert(p.begin(),'d');//Gi[i][j]+1);
+            p.insert(p.begin(),std::tuple<'d',s2[j],'-'>);
             i = i - 1;  //- Gi[i][j] - 1;
         }
         if(maxValue==l)
         {
-            p.insert(p.begin(),'i');
+            //p.insert(p.begin(),'i');
+            p.insert(p.begin(),std::tuple<'i','-',s1[i]>);
             j = j - 1; //- Gd[i][j] - 1;
         }
     }

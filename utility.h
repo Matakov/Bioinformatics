@@ -37,9 +37,10 @@ double maxFun(double , double ,double);
 
 double sim(Scorer, char , char );
 
-void printAlignment(std::string const& ,std::string const& ,std::vector<char> const& , int, int, int, int);
+std::vector<std::tuple<char,char,char>> pathReconstruction(int* ,const int& , const int& ,const std::string& , const std::string& );
 
-std::vector<char> pathReconstruction(int* ,const int& , const int& );
+void printAlignment(std::string const& ,std::string const& ,std::vector<char> const& , int, int, int, int);
+void printAlignment(std::vector<std::tuple<char,char,char>> vector);
 
 void NeedlemanWunsch(std::string& , std::string& , double , double (*)(char,char), double& ,double& ,double& , double& ,double& ,std::vector<char>& );
 
