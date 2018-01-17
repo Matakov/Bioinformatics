@@ -12,6 +12,7 @@
 #include<time.h>
 #include<iterator>
 #include<string>
+#include <ctime>
 
 //******************************************************************************
 // PUBLIC
