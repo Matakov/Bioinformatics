@@ -39,6 +39,7 @@ double sim(Scorer, char , char );
 
 void printAlignment(std::string const& ,std::string const& ,std::vector<char> const& , int, int, int, int);
 
+std::vector<char> pathReconstruction(int* ,const int& , const int& );
 
 void NeedlemanWunsch(std::string& , std::string& , double , double (*)(char,char), double& ,double& ,double& , double& ,double& ,std::vector<char>& );
 

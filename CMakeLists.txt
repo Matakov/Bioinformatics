@@ -11,6 +11,8 @@ set (CMAKE_CXX_STANDARD 11)
 # so that we will find TutorialConfig.h
 include_directories("${PROJECT_BINARY_DIR}")
 
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11 -arch=sm_35 -rdc=true" )
+
 cuda_compile(HELPER_O SW.cu)
 
 # add the executable

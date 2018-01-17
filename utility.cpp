@@ -546,8 +546,45 @@ void padding(std::string& a, std::string& b, int M, int N)
     }
 }
 
+/*
+Authors: Franjo Matković, Dario Sitnik
 
-
+input parameters:   - memory pointer
+                    - position of end alignment
+                    - memory 
+output parameters:  - vector containing optimal path
+*/
+std::vector<char> pathReconstruction(int* memory,const int& position, const int& row)
+{
+    int i=m;
+    int j=n;
+    int u,l,ul,maxValue;
+    std::vector<char> p;
+    while(memory[i*row+j]!=0)
+    {
+        l  = memory[i*row+j - 1];
+        u  = memory[i*row+j - row];
+        ul = memory[i*row+j - row - 1];
+        maxValue = maxFun(l,u,ul);
+        if(maxValue == ul)
+        {
+            p.insert(p.begin(),'m');
+            i--;
+            j--;
+        }
+        if(maxValue==u)
+        {
+            p.insert(p.begin(),'d');//Gi[i][j]+1);
+            i = i - 1;  //- Gi[i][j] - 1;
+        }
+        if(maxValue==l)
+        {
+            p.insert(p.begin(),'i');
+            j = j - 1; //- Gd[i][j] - 1;
+        }
+    }
+    return p;
+}
 
 /*
 Authors: Franjo Matkovic
