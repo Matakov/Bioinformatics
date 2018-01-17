@@ -703,14 +703,23 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	initmemoryHSW<<<40, blockSize>>>(memory,m,n,N);
 	cudaDeviceSynchronize();
 
-    double start = myCPUTimer();
+    float elapsed=0;
+    cudaEvent_t start, stop;
+    HANDLE_ERROR(cudaEventCreate(&start));
+    HANDLE_ERROR(cudaEventCreate(&stop));
+
+    HANDLE_ERROR( cudaEventRecord(start, 0));
     //CALCULATION
     //std::cout<<"Calculation started:"<<std::endl;
     
     kernelCallsKernel<<<blockNum, 1>>>(memory,m,n,m_orig,n_orig,N,x1, x2, blockNum,blockNum_m,blockNum_n,blockSize_n,blockSize_n,threadNumber,threadNumber_m,threadNumber_n,threadSize,threadSize_m,threadSize_n,semaphore,scorer,maxBlock,postionMaxBlock);
     cudaDeviceSynchronize();
-    double end = myCPUTimer();
-    double time = end-start;
+    HANDLE_ERROR(cudaEventRecord(stop, 0));
+    HANDLE_ERROR(cudaEventSynchronize (stop) );
+    HANDLE_ERROR(cudaEventElapsedTime(&elapsed, start, stop) );
+    HANDLE_ERROR(cudaEventDestroy(start));
+    HANDLE_ERROR(cudaEventDestroy(stop));  
+
     int maxValue=0;
     int maxPosition=0;
     int currentValue;    
@@ -747,7 +756,7 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 
     std::vector<std::tuple<char,char,char>> alig = pathReconstruction(memory,maxPosition,n,s2,s1);
     printAlignment(alig);
-    std::cout<<"time: "<< time <<std::endl;
+    std::cout<<"time: "<< elapsed <<std::endl;
     
     // show memory usage of GPU
     size_t free_byte ;
