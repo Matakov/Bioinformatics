@@ -615,7 +615,7 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	int m = string_m.length() + 1;
 	int n = string_n.length() + 1;
 
-    	int m_orig = m;
+    int m_orig = m;
 	int n_orig = n;
 
 	//B is the desirable number of blocks in grid
@@ -624,17 +624,18 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	int blockNum_m = floor(((double)m/n)*k);
 	int blockNum = blockNum_n*blockNum_m;
     
-    std::cout<<"k: "<<k<<"B: "<<B<<"m/n: "<<m/n<<"B/m/n: "<<B/(m/n)<<"blockNum_n: "<<blockNum_n<<" "<<"blockNum_m: "<<blockNum_m<<" blockNum: "<<blockNum<<std::endl;
-    	int N = (m)*(n);
+    //std::cout<<"k: "<<k<<"B: "<<B<<"m/n: "<<m/n<<"B/m/n: "<<B/(m/n)<<"blockNum_n: "<<blockNum_n<<" "<<"blockNum_m: "<<blockNum_m<<" blockNum: "<<blockNum<<std::endl;
+    int N = (m)*(n);
 
 	//here we define how much will there be blocks in m and n direction
-    	int blockSize_n = ceil((double)n/blockNum_n);
+    int blockSize_n = ceil((double)n/blockNum_n);
 	int blockSize = (int)pow(blockSize_n,2);
     
-	std::cout<<"blockSize: "<<blockSize<<std::endl;
-	std::cout<<"blockNum_n: "<<blockNum_n<<" "<<"blockNum_m: "<<blockNum_m<<" blockNum: "<<blockNum<<std::endl;
-	std::cout<<"n: "<<n<<" "<<"m: "<<m<<std::endl;
+	//std::cout<<"blockSize: "<<blockSize<<std::endl;
+	//std::cout<<"blockNum_n: "<<blockNum_n<<" "<<"blockNum_m: "<<blockNum_m<<" blockNum: "<<blockNum<<std::endl;
+	//std::cout<<"n: "<<n<<" "<<"m: "<<m<<std::endl;
 
+    
 	//calculate threadNumber and threadSize
 	int threadNumber = blockSize;
 	int threadNumber_n = (int)pow(blockSize,0.5);
@@ -656,13 +657,13 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	threadNumber_n = threadNumber/threadSize_n;
 	}
 
-    	std::cout<<"threadNumber: "<<threadNumber<<" threadNumber_m: "<<threadNumber_m<<" threadNumber_n; "<<threadNumber_n<<std::endl;
+    //std::cout<<"threadNumber: "<<threadNumber<<" threadNumber_m: "<<threadNumber_m<<" threadNumber_n; "<<threadNumber_n<<std::endl;
 	//here we are padding strings so there are no elements that will be
 	padding(string_m,string_n,blockNum_m*(int)ceil(pow(blockSize,0.5)),blockNum_n*(int)ceil(pow(blockSize,0.5)));
 
 	m=string_m.length()+1;
 	n=string_n.length()+1;	
-   	std::cout<<"n: "<<n<<" "<<"m: "<<m<<std::endl;
+   	//std::cout<<"n: "<<n<<" "<<"m: "<<m<<std::endl;
 	N = (m)*(n);
 	//part of code where memory allocation is happening
 	cudaMallocManaged(&memory, N*sizeof(int));
@@ -702,29 +703,33 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	initmemoryHSW<<<40, blockSize>>>(memory,m,n,N);
 	cudaDeviceSynchronize();
 
-    	//CALCULATION
-    	std::cout<<"Calculation started:"<<std::endl;
-
-    	kernelCallsKernel<<<blockNum, 1>>>(memory,m,n,m_orig,n_orig,N,x1, x2, blockNum,blockNum_m,blockNum_n,blockSize_n,blockSize_n,threadNumber,threadNumber_m,threadNumber_n,threadSize,threadSize_m,threadSize_n,semaphore,scorer,maxBlock,postionMaxBlock);
-    	cudaDeviceSynchronize();
-
-    	int maxValue=0;
-    	int maxPosition=0;
-        int currentValue;    
-    	for(int i=0;i<m;i++)
-    	{
-		    for(int j=0;j<n;j++)
-		    {
-                currentValue = memory[i*(n)+j];
-                if (currentValue > maxValue)
-                {
-                    maxValue = currentValue;
-                    maxPosition = i*(n)+j;
-                }
-			    std::cout<<currentValue<<" ";  
-		    }
-		    std::cout<<std::endl;   
-    	}
+    
+    std::clock_t start;
+    double duration;
+    start = std::clock();
+    //CALCULATION
+    //std::cout<<"Calculation started:"<<std::endl;
+    
+    kernelCallsKernel<<<blockNum, 1>>>(memory,m,n,m_orig,n_orig,N,x1, x2, blockNum,blockNum_m,blockNum_n,blockSize_n,blockSize_n,threadNumber,threadNumber_m,threadNumber_n,threadSize,threadSize_m,threadSize_n,semaphore,scorer,maxBlock,postionMaxBlock);
+    cudaDeviceSynchronize();
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+    int maxValue=0;
+    int maxPosition=0;
+    int currentValue;    
+    for(int i=0;i<m;i++)
+    {
+	    for(int j=0;j<n;j++)
+	    {
+            currentValue = memory[i*(n)+j];
+            if (currentValue > maxValue)
+            {
+                maxValue = currentValue;
+                maxPosition = i*(n)+j;
+            }
+	        std::cout<<currentValue<<" ";  
+	    }
+	    std::cout<<std::endl;   
+    }
 	std::cout<<std::endl;
 	std::cout<<std::endl;
 	//std::cout<<"blockNum "<<blockNum<<std::endl;
@@ -745,7 +750,7 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 
     std::vector<std::tuple<char,char,char>> alig = pathReconstruction(memory,maxPosition,n,s2,s1);
     printAlignment(alig);
-       
+    std::cout<<"time: "<< duration <<std::endl;
 	//memory freeing
 	cudaFree(memory);
 	cudaFree(M);
