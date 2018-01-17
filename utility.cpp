@@ -11,8 +11,8 @@ typedef struct score {
 Scorer setScorer(int match, int mismatch, int gapOpenPenalty, int gapExtendPenaly)
 {
     Scorer score;
-    score.m = match;
-    score.mm = mismatch;
+    score.match = match;
+    score.mismatch = mismatch;
     score.d = gapOpenPenalty;
     score.e = gapExtendPenaly;
     return score;
@@ -73,7 +73,6 @@ void importFile(std::string filename, std::map<std::string,std::string>& mapData
         else
         {
             seq+=line;
-            //std::cout<<seq<<std::endl;
         }       
     }
     data.push_back(seq);
@@ -89,7 +88,15 @@ void importFile(std::string filename, std::map<std::string,std::string>& mapData
     return;
 }
 
+/*
+Authors: Franjo Matkovic, Dario Sitnik
 
+Input parameters: filename string
+
+Output parameters: data string
+
+read file in a map and take first key if it is in a fasta, otherwise read in a string  
+*/
 std::string getSequence(std::string filename)
 {
     std::cout<<filename<<std::endl;
@@ -109,22 +116,14 @@ std::string getSequence(std::string filename)
     }
 }
 
-
-void printVector(std::vector<std::string>& container)
-{
-    for(int i=0;i<container.size();i++)
-    {
-        std::cout<<container[i]<<std::endl;
-    }
-    //std::cout<<std::endl;
-    return;
-}
-
-
 /*
 Authors: Franjo Matkovic
 
-concatenace all map values in a string
+Input parameters: file map
+
+Output parameters: data string
+
+take values from a map and concatenate in a single string
 */
 void mapToString( const std::map<std::string,std::string>& myMap, std::string& vector)
 {
@@ -138,12 +137,16 @@ void mapToString( const std::map<std::string,std::string>& myMap, std::string& v
 /*
 Authors: Franjo Matkovic
 
-concatenace all map values in a string
+Input parameters: scorer struct, two characters
+
+Output parameters: match value
+
+Take chars from a file and return matching value
 */
 double sim(Scorer score, char a, char b)
 {
-    if(a==b) return score.m;
-    else return score.mm;
+    if(a==b) return score.match;
+    else return score.mismatch;
 }
 
 
@@ -151,12 +154,28 @@ double sim(Scorer score, char a, char b)
 /*
 Authors: Franjo Matkovic
 
-concatenace all map values in a string
+Input parameters: 3 double values
+
+Output parameters: maximum value
+
+Take inputs and return their maximum value
 */
 double maxFun(double a, double b,double c)
 {
     return std::max(std::max(a,b),c);
 }
+
+/*
+Authors: Franjo Matkovic
+
+Input parameters:   - pointer to an array
+                    - size in x dimension
+                    - size in y dimension
+
+Output parameters: maximum value
+
+Take inputs and return their maximum value
+*/
 
 void printMatrix(int **array, size_t rows, size_t cols)
 {
@@ -189,7 +208,7 @@ Output parameters:
         - pe  - path for alignment
 */
 
-void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
+void NeedlemanWunsch(std::string& s1, std::string& s2, double penalty, double (*sim)(Scorer,char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
 {
 	//initialization
 	int m=s1.length()+1;
@@ -303,7 +322,7 @@ Output parameters:
         - s  - alignment score
         - pe  - path for alignment
 */
-void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*sim)(char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
+void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*sim)(Scorer,char,char), double& b1,double& e1,double& b2, double& e2,double& s,std::vector<char>& pe)
 {
     //initialization
     int m=s1.length()+1;
@@ -375,28 +394,6 @@ void SmithWaterman(std::string& s1, std::string& s2, double penalty, double (*si
 
         }
     }
-    /*
-    //print H
-    std::cout<<"H: "<<std::endl;    
-    for(int i=0;i<m;i++)
-    {
-        for(int j=0;j<n;j++)
-        {
-            std::cout<<std::setw(5)<<H[i][j]<<" ";
-        }
-        std::cout<<std::endl;
-    }
-    //print M
-    std::cout<<"M: "<<std::endl;    
-    for(int i=0;i<m;i++)
-    {
-        for(int j=0;j<n;j++)
-        {
-            std::cout<<std::setw(5)<<M[i][j]<<" ";
-        }
-        std::cout<<std::endl;
-    }
-    */
     //Reconstruction
     int i=e1;
     int j=e2;
