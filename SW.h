@@ -12,7 +12,7 @@
 #include<time.h>
 #include<iterator>
 #include<string>
-#include <cuda.h>
+//#include <cuda.h>
 #include"utility.h"
 //******************************************************************************
 // PUBLIC
@@ -33,4 +33,6 @@ extern "C" float* initializeMemoryMatrixCPU(const std::string& ,const std::strin
 void NeedlemanWunschGPU(std::string const&, std::string const&, double const, double const,double (*)(char,char));
 
 void SmithWatermanGPU(std::string const& , std::string const& , double const, Scorer );
+
+void SmithWatermanPrep(std::string const& , std::string const& , Scorer );
 //******************************************************************************

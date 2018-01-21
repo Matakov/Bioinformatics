@@ -780,3 +780,152 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	cudaFree(x2);
 	return;
 }
+
+__global__ void kernelLevel(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2);
+__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int blockCoordX, int blockCoordY, int BlockSize_n,int BlockSize_m, Scorer scorer);
+
+void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scorer)
+{    
+	std::string string_m(s1);
+	std::string string_n(s2);
+
+	//memory locations 
+	int *memory;
+	char *M;
+
+	//every kernel will have 1024 threads
+	int BlockSize_n = 32;
+	int BlockSize_m = 32;
+
+	int m = string_m.length()+1;
+	int n = string_n.length()+1;
+
+	float padm = ceil(float(m)/BlockSize_m)*BlockSize_m;
+	float padn = ceil(float(n)/BlockSize_n)*BlockSize_n;
+
+	std::cout<<"Size 1: "<<m<<" Size 2: "<<n<<" padding: "<<padm<<" "<<padn<<std::endl;
+
+	padding(string_m,string_n,padm,padn);    
+
+	m = string_m.length()+1;
+	n = string_n.length()+1;
+
+	std::cout<<"Size 1: "<<m<<" Size 2: "<<n<<std::endl;
+
+	int numBlocks_m = float(m)/BlockSize_m;
+	int numBlocks_n = float(n)/BlockSize_n;
+
+	std::cout<<"NumBlock m: "<<numBlocks_m<<" NumBlock n: "<<numBlocks_n<<std::endl;
+
+
+	int N = (m)*(n);
+	//part of code where memory allocation is happening
+	cudaMallocManaged(&memory, N*sizeof(int));
+	cudaMallocManaged(&M, N*sizeof(char));
+
+	char* x1 ;//= allocateMemory(string_m);
+	
+	const char *cstr = string_m.c_str();
+	cudaMallocManaged(&x1, string_m.length()*(sizeof(char)+1));
+	strcpy(x1, cstr);   
+	x1[string_m.length()]='\0';
+	
+	char* x2 ;// = allocateMemory(string_n);
+
+	const char *cstr2 = string_n.c_str();
+	cudaMallocManaged(&x2, string_n.length()*(sizeof(char)+1));
+    	strcpy(x2, cstr2);   
+    	x2[string_n.length()]='\0';
+	
+	int *semaphore;
+    	int *maxBlock;
+    	int *postionMaxBlock;
+
+	initmemoryHSW<<<40, 32>>>(memory,m,n,N);
+	cudaDeviceSynchronize();
+	/*
+	for(int i=0;i<m;i++)
+	{
+		for(int j=0;j<n;j++)
+		{
+			std::cout<<memory[i*n+j]<<" ";
+		}
+		std::cout<<std::endl;
+	}
+	*/
+	std::cout<<std::endl;
+	//SW<<<1,1>>>(memory,m,n,numBlocks_m,numBlocks_n,x1,x2);
+	//kernelLevel<<<1,1>>>(memory,m,n,numBlocks_m,numBlocks_n,x1,x2);
+	threadLevel<<<1,1024, 1024*sizeof(int)>>>(memory, m, n, x1, x2,1, 1, BlockSize_n, BlockSize_m, scorer);
+	cudaDeviceSynchronize();
+	
+	for(int i=0;i<m;i++)
+	{
+		for(int j=0;j<n;j++)
+		{
+			std::cout<<std::setw(2)<<memory[i*n+j]<<" ";
+		}
+		std::cout<<std::endl;
+	}
+	/*
+	for(int i=0;i<8*8;i++)
+	{
+		std::cout<<i/8 + i%8<<" ";
+		if((i+1)%8==0) std::cout<<std::endl;
+	}
+	*/
+	return;
+}
+
+__global__ void kernelLevel(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2)
+{
+	int index = blockIdx.x;
+	int blockCoordX = blockIdx.x%(int)numBlocks_n;
+    	int blockCoordY = blockIdx.x/(int)numBlocks_m;
+	return;
+}
+
+__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int blockCoordX, int blockCoordY, int BlockSize_n,int BlockSize_m, Scorer scorer)
+{
+	//extern __shared__ int semaphore[];
+	//semaphore[threadIdx.x]=0;
+	//__syncthreads();
+	//semaphore[0]=1;
+	//__syncthreads();
+	int simil, newScore;
+	for(int i=0;i<BlockSize_n+BlockSize_m-1;i++)
+	{
+		//if((threadIdx.x%n+threadIdx.x/n)==i) memory[threadIdx.x]=i;
+				
+		if((threadIdx.x%n+threadIdx.x/n)==i)
+		{
+			if(!((threadIdx.x < n) || (threadIdx.x%n==0)))
+			{
+				if(threadIdx.x==266)
+				{
+					printf("%d\n",threadIdx.x);
+					printf("%d\n",memory[threadIdx.x-n]);
+					printf("%d\n",memory[threadIdx.x-1]);
+					printf("%d\n",memory[threadIdx.x-n-1]);
+					printf("%d\n",memory[threadIdx.x]);
+				
+				}
+				if(x1[(threadIdx.x/n)-1]==x2[(threadIdx.x%n)-1]) simil = 1;//score.m;
+        			else simil = -3;//score.mm;
+				newScore = (int)max(memory[threadIdx.x-1-n]+(int)simil,max(memory[threadIdx.x-n]-(int)scorer.d,max(0,memory[threadIdx.x-1]-(int)scorer.d)));
+		       		memory[threadIdx.x] = newScore;
+			}
+		}
+		__syncthreads();
+		
+	}
+	//while(semaphore[threadIdx.x]==0){}
+	//memory[threadIdx.x]=threadIdx.x%n+threadIdx.x/n;
+	//printf("%d",threadIdx.x);	
+
+	//if((threadIdx.x+1)/n < m && (threadIdx.x+1)%n<n) semaphore[threadIdx.x+1]=1;
+	//if((threadIdx.x+n)/n < m && (threadIdx.x+n)%n<n) semaphore[threadIdx.x+n]=1;
+	
+	__syncthreads();
+	return;
+}
