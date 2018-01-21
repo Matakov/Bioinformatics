@@ -783,6 +783,7 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 
 __global__ void kernelLevel(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2);
 __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int blockCoordX, int blockCoordY, int BlockSize_n,int BlockSize_m, Scorer scorer);
+__global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2);
 
 void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scorer)
 {    
@@ -856,9 +857,9 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 	std::cout<<std::endl;
 	//SW<<<1,1>>>(memory,m,n,numBlocks_m,numBlocks_n,x1,x2);
 	//kernelLevel<<<1,1>>>(memory,m,n,numBlocks_m,numBlocks_n,x1,x2);
-	threadLevel<<<1,1024, 1024*sizeof(int)>>>(memory, m, n, x1, x2,1, 1, BlockSize_n, BlockSize_m, scorer);
-	cudaDeviceSynchronize();
-	
+	//threadLevel<<<1,1024, 1024*sizeof(int)>>>(memory, m, n, x1, x2,1, 1, BlockSize_n, BlockSize_m, scorer);
+	//cudaDeviceSynchronize();
+	/*
 	for(int i=0;i<m;i++)
 	{
 		for(int j=0;j<n;j++)
@@ -867,13 +868,47 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 		}
 		std::cout<<std::endl;
 	}
-	/*
-	for(int i=0;i<8*8;i++)
-	{
-		std::cout<<i/8 + i%8<<" ";
-		if((i+1)%8==0) std::cout<<std::endl;
-	}
 	*/
+	kernelMain<<<1,1>>>(memory,m,n,numBlocks_m,numBlocks_n,x1,x2);
+	cudaDeviceSynchronize();
+	/*
+	for(int i=0;i<numBlocks_m;i++)
+	{
+		for(int j=0;j<numBlocks_n;j++)
+		{
+			std::cout<<std::setw(2)<<i+j<<" ";
+		}
+		std::cout<<std::endl;
+	}	
+	*/
+	
+	
+	for(int i=0;i<7*4;i++)
+	{
+		std::cout<<i/4 + i%4<<" ";
+		if((i+1)%4==0) std::cout<<std::endl;
+	}
+	
+	return;
+}
+
+__global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2)
+{
+	int numBlocks;
+	int nums =numBlocks_m+numBlocks_n-1;
+	int limit=0;
+	int big = max(numBlocks_m,numBlocks_n);
+	int small = min(numBlocks_m,numBlocks_n);
+	for(int i=1;i<=nums;i++)
+	{
+		numBlocks=min(numBlocks_m,min(i,numBlocks_n));
+		if(i > big)
+		{
+			limit++;
+			numBlocks = small-limit;
+		}
+		printf("%d\n",numBlocks);
+	}
 	return;
 }
 
