@@ -4,8 +4,8 @@
 
 int main(int argc, const char** argv)
 {
-    if(argc<3) {std::cout<<"Too few arguments!\nProgram needs to be called like this $./program [FILES FILES] [match] [mismatch] [gap-open] [gap-extend] [max-blocks]"<<std::endl;exit(1);}
-    if(argc>8) {std::cout<<"Too much arguments!\nProgram needs to be called like this $./program [FILES FILES] [match] [mismatch] [gap-open] [gap-extend] [max-blocks]"<<std::endl;exit(1);}
+    //if(argc<3) {std::cout<<"Too few arguments!\nProgram needs to be called like this $./program [FILES FILES] [match] [mismatch] [gap-open] [gap-extend] [max-blocks]"<<std::endl;exit(1);}
+    //if(argc>8) {std::cout<<"Too much arguments!\nProgram needs to be called like this $./program [FILES FILES] [match] [mismatch] [gap-open] [gap-extend] [max-blocks]"<<std::endl;exit(1);}
     int m,mm,d,e;
     double b;
     //Default values
@@ -14,7 +14,7 @@ int main(int argc, const char** argv)
     mm = -3;
     d = 2;
     e = 2;
-
+    /*
     std::string s1_name;
     std::string s2_name;
 
@@ -36,9 +36,12 @@ int main(int argc, const char** argv)
     
     std::cout<<s1<<std::endl;
     std::cout<<s2<<std::endl;
-
+    */
+    std::string s1 = "ATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATGGGGGGCCCCCGGGGGGGGGGGGGGGGGATATATATATATATATATATGGGGGGCCCCCGGGGGGGGGGGGGGGGGATATATATATATATATATATGGGGGGCCCCCGGGGGGGGGGGGGGGGG";
+    std::string s2 = "ATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATAT";
     Scorer scorer = setScorer(m,mm,d,e);
-    SmithWatermanGPU(s1,s2,b,scorer);   
+    //SmithWatermanGPU(s1,s2,b,scorer);   
+    SmithWatermanPrep(s1,s2,scorer);
 
     return 0;
     

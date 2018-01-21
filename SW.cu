@@ -686,7 +686,7 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	int *semaphore;
     	int *maxBlock;
     	int *postionMaxBlock;
- 
+ 	
 	cudaMallocManaged(&semaphore, blockNum*sizeof(int));
 	cudaMallocManaged(&maxBlock, blockNum*sizeof(int));
 	cudaMallocManaged(&postionMaxBlock, blockNum*sizeof(int));
@@ -781,9 +781,8 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	return;
 }
 
-__global__ void kernelLevel(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2);
-__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int blockCoordX, int blockCoordY, int BlockSize_n,int BlockSize_m, Scorer scorer);
-__global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2);
+__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer,int*positionList);
+__global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2,int *positionList,Scorer scorer,int BlockSize_n,int BlockSize_m);
 
 void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scorer)
 {    
@@ -838,9 +837,7 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
     	strcpy(x2, cstr2);   
     	x2[string_n.length()]='\0';
 	
-	int *semaphore;
-    	int *maxBlock;
-    	int *postionMaxBlock;
+	int *positionList;
 
 	initmemoryHSW<<<40, 32>>>(memory,m,n,N);
 	cudaDeviceSynchronize();
@@ -854,7 +851,7 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 		std::cout<<std::endl;
 	}
 	*/
-	std::cout<<std::endl;
+	//std::cout<<std::endl;
 	//SW<<<1,1>>>(memory,m,n,numBlocks_m,numBlocks_n,x1,x2);
 	//kernelLevel<<<1,1>>>(memory,m,n,numBlocks_m,numBlocks_n,x1,x2);
 	//threadLevel<<<1,1024, 1024*sizeof(int)>>>(memory, m, n, x1, x2,1, 1, BlockSize_n, BlockSize_m, scorer);
@@ -869,7 +866,11 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 		std::cout<<std::endl;
 	}
 	*/
-	kernelMain<<<1,1>>>(memory,m,n,numBlocks_m,numBlocks_n,x1,x2);
+	cudaMallocManaged(&positionList, std::min(numBlocks_m,numBlocks_n)*sizeof(int));
+	initsemaphor<<<1, std::min(numBlocks_m,numBlocks_n)>>>(positionList, std::min(numBlocks_m,numBlocks_n));
+	cudaDeviceSynchronize();
+
+	kernelMain<<<1,1>>>(memory,m,n,numBlocks_m,numBlocks_n,x1,x2,positionList,scorer,BlockSize_n,BlockSize_m );
 	cudaDeviceSynchronize();
 	/*
 	for(int i=0;i<numBlocks_m;i++)
@@ -892,15 +893,19 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 	return;
 }
 
-__global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2)
+__global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2,int* positionList,Scorer scorer, int BlockSize_n,int BlockSize_m )
 {
 	int numBlocks;
 	int nums =numBlocks_m+numBlocks_n-1;
 	int limit=0;
 	int big = max(numBlocks_m,numBlocks_n);
 	int small = min(numBlocks_m,numBlocks_n);
+	int *positionListTemp;
+	int iter = 0;
+	//positionListTemp = (int*)malloc((int)min(numBlocks_m,numBlocks_n)*sizeof(int));
 	for(int i=1;i<=nums;i++)
 	{
+		positionListTemp = (int*)malloc((int)min(numBlocks_m,numBlocks_n)*sizeof(int));
 		numBlocks=min(numBlocks_m,min(i,numBlocks_n));
 		if(i > big)
 		{
@@ -908,19 +913,52 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 			numBlocks = small-limit;
 		}
 		printf("%d\n",numBlocks);
+		printf("Previous:\n");
+		for(int j=0;j<numBlocks;j++) printf("%d ",positionList[j]);
+		printf("\n");
+		threadLevel<<<numBlocks,1024>>>(memory, m, n, x1, x2, BlockSize_n,BlockSize_m, scorer,positionList);
+		cudaDeviceSynchronize();
+		iter = 0;
+		for(int j=0;j<numBlocks;j++)
+		{
+			if(positionList[j]%n==0) //First column
+			{
+				positionListTemp[iter] = positionList[j] + BlockSize_n;
+				iter++;
+				positionListTemp[iter] = positionList[j] + n*BlockSize_m;
+				iter++;
+				//printf("Calculate first column:\n");
+				//printf("%d, %d, %d\n",positionList[j], BlockSize_n, n*BlockSize_m);	
+			}		
+			else if((positionList[j]+BlockSize_n)%n==0) //Last column
+			{
+				//iter--;
+				continue;
+			}
+			//else if((positionList[j]+n*BlockSize_m)>=BlockSize_n*BlockSize_m) //Last row
+			//{
+				//iter--;
+				//continue;
+			//}
+			else
+			{
+				//printf("Calculate else:\n");
+				//printf("%d, %d\n",positionList[j], BlockSize_n);
+				positionListTemp[iter] = positionList[j] + BlockSize_n;
+				iter++;
+			}
+			
+		}
+		free(positionList);
+		positionList = positionListTemp;
+		printf("After:\n");
+		for(int j=0;j<iter;j++) printf("%d, ",positionList[j]);
+		printf("\n\n");
 	}
 	return;
 }
 
-__global__ void kernelLevel(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2)
-{
-	int index = blockIdx.x;
-	int blockCoordX = blockIdx.x%(int)numBlocks_n;
-    	int blockCoordY = blockIdx.x/(int)numBlocks_m;
-	return;
-}
-
-__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int blockCoordX, int blockCoordY, int BlockSize_n,int BlockSize_m, Scorer scorer)
+__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer, int* positionList)
 {
 	//extern __shared__ int semaphore[];
 	//semaphore[threadIdx.x]=0;
@@ -938,11 +976,13 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int b
 			{
 				if(threadIdx.x==266)
 				{
+					/*
 					printf("%d\n",threadIdx.x);
 					printf("%d\n",memory[threadIdx.x-n]);
 					printf("%d\n",memory[threadIdx.x-1]);
 					printf("%d\n",memory[threadIdx.x-n-1]);
 					printf("%d\n",memory[threadIdx.x]);
+					*/
 				
 				}
 				if(x1[(threadIdx.x/n)-1]==x2[(threadIdx.x%n)-1]) simil = 1;//score.m;
