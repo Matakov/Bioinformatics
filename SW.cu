@@ -1000,10 +1000,11 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 					*/
 				
 				//}
-				//if(x1[(index/n + (threadIdx.x/BlockSize_n)-1)]==x2[ index%n + (threadIdx.x%n)-1]) simil = 1;//score.m;
-        			//else simil = -3;//score.mm;
-				//newScore = (int)max(memory[(index/n + threadIdx.x/BlockSize_n - 1)*n + (index%n + threadIdx.x%BlockSize_n - 1)]+(int)simil,max(memory[(index/n + threadIdx.x/BlockSize_n - 1)*n + (index%n + threadIdx.x%BlockSize_n)]-(int)scorer.d,max(0,memory[(index/n + threadIdx.x/BlockSize_n)*n + (index%n + threadIdx.x%BlockSize_n - 1)]-(int)scorer.d)));
-		       		memory[(index/n + threadIdx.x/BlockSize_m)*n + (index%n + threadIdx.x%BlockSize_n)] = i;//(index/n + threadIdx.x/BlockSize_m)*n + (index%n + threadIdx.x%BlockSize_n);//blockIdx.x+1;//newScore;
+				if(x1[(index/n + (threadIdx.x/BlockSize_m))-1]==x2[ index%n + (threadIdx.x%BlockSize_n)-1]) simil = 1;//score.m;
+        			else simil = -3;//score.mm;
+				newScore = (int)max(memory[(index/n + threadIdx.x/BlockSize_n - 1)*n + (index%n + threadIdx.x%BlockSize_n - 1)]+(int)simil,max(memory[(index/n + threadIdx.x/BlockSize_n - 1)*n + (index%n + threadIdx.x%BlockSize_n)]-(int)scorer.d,max(0,memory[(index/n + threadIdx.x/BlockSize_n)*n + (index%n + threadIdx.x%BlockSize_n - 1)]-(int)scorer.d)));
+				//newScore = memory[(index/n + threadIdx.x/BlockSize_m - 1)*n + (index%n + threadIdx.x%BlockSize_n) ] + 1;
+		       		memory[(index/n + threadIdx.x/BlockSize_m)*n + (index%n + threadIdx.x%BlockSize_n)] = newScore;
 			}
 		}
 		__syncthreads();
