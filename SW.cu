@@ -816,8 +816,20 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 	int numBlocks_n = float(n)/BlockSize_n;
 
 	std::cout<<"NumBlock m: "<<numBlocks_m<<" NumBlock n: "<<numBlocks_n<<std::endl;
+	////////////
+	int MAXCORES = 500;
+	//Here will be kept values for initializations
+	int arrayN[n];
+	int arrayM[m];
 
-
+	std::fill_n(arrayN,n,0);
+	std::fill_n(arrayM,m,0);
+	
+	int maxValues[(int)((float)numBlocks_n/MAXCORES)*(int)((float)numBlocks_m/MAXCORES)];
+	int maxPositions[(int)((float)numBlocks_n/MAXCORES)*(int)((float)numBlocks_m/MAXCORES)];
+	
+	std::cout<<arrayN[0]<<" "<<arrayN[n-1]<<" "<<arrayN[int(n/2)]<<std::endl; 
+	//////////////////////////////////////////////////////////////////////////ODAVDE PRILAGODITI
 	int N = (m)*(n);
 	//part of code where memory allocation is happening
 	cudaMallocManaged(&memory, N*sizeof(int));
