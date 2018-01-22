@@ -781,7 +781,7 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	return;
 }
 
-__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer,int*positionList);
+__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer,int*positionList,int* biggestValue,int* biggestPosition);
 __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2,int *positionList,Scorer scorer,int BlockSize_n,int BlockSize_m);
 
 void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scorer)
@@ -816,20 +816,8 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 	int numBlocks_n = float(n)/BlockSize_n;
 
 	std::cout<<"NumBlock m: "<<numBlocks_m<<" NumBlock n: "<<numBlocks_n<<std::endl;
-	////////////
-	int MAXCORES = 500;
-	//Here will be kept values for initializations
-	int arrayN[n];
-	int arrayM[m];
 
-	std::fill_n(arrayN,n,0);
-	std::fill_n(arrayM,m,0);
-	
-	int maxValues[(int)((float)numBlocks_n/MAXCORES)*(int)((float)numBlocks_m/MAXCORES)];
-	int maxPositions[(int)((float)numBlocks_n/MAXCORES)*(int)((float)numBlocks_m/MAXCORES)];
-	
-	std::cout<<arrayN[0]<<" "<<arrayN[n-1]<<" "<<arrayN[int(n/2)]<<std::endl; 
-	//////////////////////////////////////////////////////////////////////////ODAVDE PRILAGODITI
+
 	int N = (m)*(n);
 	//part of code where memory allocation is happening
 	cudaMallocManaged(&memory, N*sizeof(int));
@@ -924,6 +912,11 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 	int *positionListTemp;
 	int iter = 0;
 	printf("%d",n);
+
+    int *biggestValue = (int*)malloc((int)1*sizeof(int));
+    biggestValue[0] = 0;
+    int* biggestPosition = (int*)malloc((int)1*sizeof(int));
+    biggestPosition[0] = 0;
 	//positionListTemp = (int*)malloc((int)min(numBlocks_m,numBlocks_n)*sizeof(int));
 	for(int i=1;i<=nums;i++)
 	{
@@ -938,7 +931,7 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 		printf("Previous:\n");
 		for(int j=0;j<numBlocks;j++) printf("%d ",positionList[j]);
 		printf("\n");
-		threadLevel<<<numBlocks,1024>>>(memory, m, n, x1, x2, BlockSize_n,BlockSize_m, scorer,positionList);
+		threadLevel<<<numBlocks,1024,2*BlockSize_n*BlockSize_m*sizeof(int)>>>(memory, m, n, x1, x2, BlockSize_n,BlockSize_m, scorer,positionList,biggestValue,biggestPosition);
 		cudaDeviceSynchronize();
 		iter = 0;
 		for(int j=0;j<numBlocks;j++)
@@ -974,24 +967,35 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 			}
 			
 		}
+        
 		free(positionList);
 		positionList = positionListTemp;
 		printf("After:\n");
 		for(int j=0;j<iter;j++) printf("%d, ",positionList[j]);
 		printf("\n\n");
 	}
+    printf("\n\nBiggest value: %d Position: %d\n",biggestValue[0],biggestPosition[0]);
 	return;
 }
 
-__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer, int* positionList)
+__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer, int* positionList, int* biggestValue, int* biggestPosition)
 {
 	int index = positionList[blockIdx.x];
+    int chacheindex = threadIdx.x;
 	//printf("%d",index);
 	//extern __shared__ int semaphore[];
 	//semaphore[threadIdx.x]=0;
 	//__syncthreads();
 	//semaphore[0]=1;
 	//__syncthreads();
+    int threadNum = BlockSize_n*BlockSize_m;
+    extern __shared__ int cache[];
+    int *chacheMemory = cache;
+    int *chachePosition = (int*)&chacheMemory[threadNum];
+
+    int tempResult = 0;
+    int tempPosition = 0;
+
 	int simil, newScore;
 	for(int i=0;i<BlockSize_n+BlockSize_m-1;i++)
 	{
@@ -1017,6 +1021,8 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 				newScore = (int)max(memory[(index/n + threadIdx.x/BlockSize_n - 1)*n + (index%n + threadIdx.x%BlockSize_n - 1)]+(int)simil,max(memory[(index/n + threadIdx.x/BlockSize_n - 1)*n + (index%n + threadIdx.x%BlockSize_n)]-(int)scorer.d,max(0,memory[(index/n + threadIdx.x/BlockSize_n)*n + (index%n + threadIdx.x%BlockSize_n - 1)]-(int)scorer.d)));
 				//newScore = memory[(index/n + threadIdx.x/BlockSize_m - 1)*n + (index%n + threadIdx.x%BlockSize_n) ] + 1;
 		       		memory[(index/n + threadIdx.x/BlockSize_m)*n + (index%n + threadIdx.x%BlockSize_n)] = newScore;
+                    tempResult = newScore;
+                    tempPosition = (index/n + threadIdx.x/BlockSize_m)*n + (index%n + threadIdx.x%BlockSize_n);
 			}
 		}
 		__syncthreads();
@@ -1029,6 +1035,29 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 	//if((threadIdx.x+1)/n < m && (threadIdx.x+1)%n<n) semaphore[threadIdx.x+1]=1;
 	//if((threadIdx.x+n)/n < m && (threadIdx.x+n)%n<n) semaphore[threadIdx.x+n]=1;
 	
+    chacheMemory[chacheindex] = tempResult;
+    chachePosition[chacheindex] = tempPosition;
 	__syncthreads();
+
+    int i  = (BlockSize_n*BlockSize_m) / 2 ;
+    while ( i!=0 )
+    {
+    
+        if ( chacheindex < i )
+        {
+            if (chacheMemory[chacheindex] <= chacheMemory[chacheindex + i])
+                
+                chacheMemory[chacheindex] = chacheMemory[chacheindex + i];
+                chachePosition[chacheindex] = chachePosition[chacheindex + i];
+        }
+        __syncthreads();
+        i/=2 ;
+    }
+
+    if (biggestValue[0] <= chacheMemory[0])
+    {
+        biggestValue[0] = chacheMemory[0];
+        biggestPosition[0] = chachePosition[0];
+    }
 	return;
 }
