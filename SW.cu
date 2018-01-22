@@ -883,13 +883,22 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 	}	
 	*/
 	
+	for(int i=0;i<m;i++)
+	{
+		for(int j=0;j<n;j++)
+		{
+			std::cout<<std::setw(2)<<memory[i*n+j]<<" ";
+		}
+		std::cout<<std::endl;
+	}
 	
+	/*
 	for(int i=0;i<7*4;i++)
 	{
 		std::cout<<i/4 + i%4<<" ";
 		if((i+1)%4==0) std::cout<<std::endl;
 	}
-	
+	*/
 	return;
 }
 
@@ -923,8 +932,11 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 		{
 			if(positionList[j]%n==0) //First column
 			{
-				positionListTemp[iter] = positionList[j] + BlockSize_n;
-				iter++;
+				if(!((positionList[j]+BlockSize_n)%n==0)) //if it is first row and first column check if there is next element
+				{
+					positionListTemp[iter] = positionList[j] + BlockSize_n;
+					iter++;
+				}
 				positionListTemp[iter] = positionList[j] + n*BlockSize_m;
 				iter++;
 				//printf("Calculate first column:\n");
@@ -935,11 +947,11 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 				//iter--;
 				continue;
 			}
-			//else if((positionList[j]+n*BlockSize_m)>=BlockSize_n*BlockSize_m) //Last row
-			//{
+			else if((positionList[j]+n*BlockSize_m)>=BlockSize_n*BlockSize_m) //Last row
+			{
 				//iter--;
-				//continue;
-			//}
+				continue;
+			}
 			else
 			{
 				//printf("Calculate else:\n");
@@ -960,6 +972,8 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 
 __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer, int* positionList)
 {
+	int index = positionList[blockIdx.x];
+	//printf("%d",index);
 	//extern __shared__ int semaphore[];
 	//semaphore[threadIdx.x]=0;
 	//__syncthreads();
@@ -972,10 +986,10 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 				
 		if((threadIdx.x%n+threadIdx.x/n)==i)
 		{
-			if(!((threadIdx.x < n) || (threadIdx.x%n==0)))
+			if(!((index + threadIdx.x < n) || ((index + threadIdx.x)%n==0)))
 			{
-				if(threadIdx.x==266)
-				{
+				//if(threadIdx.x==266)
+				//{
 					/*
 					printf("%d\n",threadIdx.x);
 					printf("%d\n",memory[threadIdx.x-n]);
@@ -984,11 +998,11 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 					printf("%d\n",memory[threadIdx.x]);
 					*/
 				
-				}
-				if(x1[(threadIdx.x/n)-1]==x2[(threadIdx.x%n)-1]) simil = 1;//score.m;
-        			else simil = -3;//score.mm;
-				newScore = (int)max(memory[threadIdx.x-1-n]+(int)simil,max(memory[threadIdx.x-n]-(int)scorer.d,max(0,memory[threadIdx.x-1]-(int)scorer.d)));
-		       		memory[threadIdx.x] = newScore;
+				//}
+				//if(x1[(index/n + (threadIdx.x/BlockSize_n)-1)]==x2[ index%n + (threadIdx.x%n)-1]) simil = 1;//score.m;
+        			//else simil = -3;//score.mm;
+				//newScore = (int)max(memory[(index/n + threadIdx.x/BlockSize_n - 1)*n + (index%n + threadIdx.x%BlockSize_n - 1)]+(int)simil,max(memory[(index/n + threadIdx.x/BlockSize_n - 1)*n + (index%n + threadIdx.x%BlockSize_n)]-(int)scorer.d,max(0,memory[(index/n + threadIdx.x/BlockSize_n)*n + (index%n + threadIdx.x%BlockSize_n - 1)]-(int)scorer.d)));
+		       		memory[(index/n + threadIdx.x/BlockSize_n)*n + (index%n + threadIdx.x%BlockSize_n)] = (index/n + threadIdx.x/BlockSize_n)*n + (index%n + threadIdx.x%BlockSize_n);//blockIdx.x+1;//newScore;
 			}
 		}
 		__syncthreads();
