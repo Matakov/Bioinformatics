@@ -880,7 +880,7 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 	int *tempMax;
 	int *tempPosition;
 	std::string str1_temp,str2_temp;
-	
+	int numberOfCores=0;
 	//part of code where memory allocation is happening
 	cudaMallocManaged(&memory, ((BlockSize_n*MAXCORES)*(BlockSize_m*MAXCORES))*sizeof(int));
 	//cudaMallocManaged(&M, N*sizeof(char));
@@ -889,26 +889,29 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 	{
 		for(int j=0;j<numChunks_n;j++)
 		{
-			initmemoryHSWchunk(memory,i,j,BlockSize_n,BlockSize_m,MAXCORES,&arrayN,&arrayM); // inicijalizacija dijela memorije
+			// trebalo bi rjesavati problem krajnjih dijelova memorije, kada nisu nuzno kvadratnog oblika
+			numberOfCores = min(min(numBlocks_n-numChunks_n*MAXCORES,numBlocks_m-numChunks_m*MAXCORES),MAXCORES);
 			
-			cudaMallocManaged(&positionList, MAXCORES*sizeof(int)); // inicijalizacija liste pomoću koje se sinkroniziraju jezgre
-			initsemaphor<<<1, MAXCORES>>>(positionList, MAXCORES);
+			initmemoryHSWchunk(memory,i,j,BlockSize_n,BlockSize_m,numberOfCores,&arrayN,&arrayM); // inicijalizacija dijela memorije
+			
+			cudaMallocManaged(&positionList, numberOfCores*sizeof(int)); // inicijalizacija liste pomoću koje se sinkroniziraju jezgre
+			initsemaphor<<<1, MAXCORES>>>(positionList, numberOfCores);
 			cudaDeviceSynchronize();	
 			
-			str1_temp = string_m.substr(i*BlockSize_m*MAXCORES,BlockSize_m*MAXCORES);	//uzimaju se pripadni substringovi koji se usporedzuju
+			str1_temp = string_m.substr(i*BlockSize_m*numberOfCores,BlockSize_m*numberOfCores);	//uzimaju se pripadni substringovi koji se usporedzuju
 			const char *cstr = str1_temp.c_str();
 			cudaMallocManaged(&x1, str1_temp.length()*(sizeof(char)+1));
 			strcpy(x1, cstr);   
 			x1[string_m.length()]='\0';
 
-			str2_temp = string_n.substr(j*BlockSize_n*MAXCORES,BlockSize_n*MAXCORES);
+			str2_temp = string_n.substr(j*BlockSize_n*numberOfCores,BlockSize_n*numberOfCores);
 			const char *cstr2 = str2_temp.c_str();
 			cudaMallocManaged(&x2, str2_temp.length()*(sizeof(char)+1));
 		    	strcpy(x2, cstr2);   
 		    	x2[string_n.length()]='\0';
 
 			// zove se funkcija koja preslikava
-			kernelMain<<<1,1>>>(memory,m,n,numBlocks_m,numBlocks_n,x1,x2,positionList,scorer,BlockSize_n,BlockSize_m, MAXCORES, tempMax, tempPosition);
+			kernelMain<<<1,1>>>(memory,m,n,numBlocks_m,numBlocks_n,x1,x2,positionList,scorer,BlockSize_n,BlockSize_m, numberOfCores, tempMax, tempPosition);
 			cudaDeviceSynchronize();
 			
 			// spremaju se max vrijednost i pozicija max vrijednosti u trenutnom bloku
@@ -916,7 +919,7 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 			maxPositions[i*numChunks_n+j]=*tempPosition;
 
 			//moraju se spremiti vrijednosti sa kojima ce se inicijalizirati matrica
-			saveLastRowCol(memory,i,j,BlockSize_n,BlockSize_m,MAXCORES,&arrayN,&arrayM);
+			saveLastRowCol(memory,i,j,BlockSize_n,BlockSize_m,numberOfCores,&arrayN,&arrayM);
 			
 
 			cudaFree(positionList);
