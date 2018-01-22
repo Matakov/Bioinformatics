@@ -911,6 +911,7 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 	int small = min(numBlocks_m,numBlocks_n);
 	int *positionListTemp;
 	int iter = 0;
+	printf("%d",n);
 	//positionListTemp = (int*)malloc((int)min(numBlocks_m,numBlocks_n)*sizeof(int));
 	for(int i=1;i<=nums;i++)
 	{
@@ -984,9 +985,9 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 	{
 		//if((threadIdx.x%n+threadIdx.x/n)==i) memory[threadIdx.x]=i;
 				
-		if((threadIdx.x%n+threadIdx.x/n)==i)
+		if((threadIdx.x%BlockSize_n+threadIdx.x/BlockSize_m)==i)
 		{
-			if(!((index + threadIdx.x < n) || ((index + threadIdx.x)%n==0)))
+			if(!(((index + threadIdx.x%BlockSize_n < n) && threadIdx.x/BlockSize_m==0) || ((index%n==0) && (threadIdx.x%BlockSize_n==0))))
 			{
 				//if(threadIdx.x==266)
 				//{
@@ -1002,7 +1003,7 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 				//if(x1[(index/n + (threadIdx.x/BlockSize_n)-1)]==x2[ index%n + (threadIdx.x%n)-1]) simil = 1;//score.m;
         			//else simil = -3;//score.mm;
 				//newScore = (int)max(memory[(index/n + threadIdx.x/BlockSize_n - 1)*n + (index%n + threadIdx.x%BlockSize_n - 1)]+(int)simil,max(memory[(index/n + threadIdx.x/BlockSize_n - 1)*n + (index%n + threadIdx.x%BlockSize_n)]-(int)scorer.d,max(0,memory[(index/n + threadIdx.x/BlockSize_n)*n + (index%n + threadIdx.x%BlockSize_n - 1)]-(int)scorer.d)));
-		       		memory[(index/n + threadIdx.x/BlockSize_n)*n + (index%n + threadIdx.x%BlockSize_n)] = (index/n + threadIdx.x/BlockSize_n)*n + (index%n + threadIdx.x%BlockSize_n);//blockIdx.x+1;//newScore;
+		       		memory[(index/n + threadIdx.x/BlockSize_m)*n + (index%n + threadIdx.x%BlockSize_n)] = i;//(index/n + threadIdx.x/BlockSize_m)*n + (index%n + threadIdx.x%BlockSize_n);//blockIdx.x+1;//newScore;
 			}
 		}
 		__syncthreads();
