@@ -782,7 +782,7 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	return;
 }
 
-__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer,int*positionList,int* biggestValue,int* biggestPosition);
+__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer,int*positionList,int* biggestValue);//,int* biggestPosition);
 __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2,int *positionList,Scorer scorer,int BlockSize_n,int BlockSize_m, int MAXCORES,int* tempMax, int* tempPosition);
 void initmemoryHSWchunk(int* memory,int i,int j,int BlockSize_n,int BlockSize_m,int numOfCores_n, int numOfCores_m, int *arrayN,int 
 *arrayM, int MAXCORES)
@@ -904,6 +904,7 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 	for(int i=0;i<numChunks_m;i++)
 	{
    
+        printf("Chunk number = %d\n",i);
 		if (i==numChunks_m-1)
 		{
 			numOfCores=numOfCores_m_last;
@@ -914,6 +915,7 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 		}
 		for(int j=0;j<numChunks_n;j++)
 		{
+            printf("Chunk number = %d\n",j);
 			if(j==numChunks_n-1)
 			{
 				if(i==numChunks_m-1)
@@ -993,10 +995,12 @@ arrayM, MAXCORES);//inicijalizacija dijela memorije
 			cudaFree(positionList);
 			cudaFree(x1);
 			cudaFree(x2);
-			cudaFree(memory);
+			//cudaFree(memory);
 		}		
 	}
 	
+    cudaFree(tempMax);
+    cudaFree(tempPosition);
 	////////////////////////////////////////////////////////////////////////////////	
 	//int N = (m)*(n);
 
@@ -1043,14 +1047,14 @@ arrayM, MAXCORES);//inicijalizacija dijela memorije
 	}	
 	*/
 	
-	for(int i=0;i<m;i++)
+	/*for(int i=0;i<m;i++)
 	{
 		for(int j=0;j<n;j++)
 		{
 			//std::cout<<std::setw(2)<<memory[i*n+j]<<" ";
 		}
 		//std::cout<<std::endl;
-	}
+	}*/
 	
 	/*
 	for(int i=0;i<7*4;i++)
@@ -1064,22 +1068,25 @@ arrayM, MAXCORES);//inicijalizacija dijela memorije
 
 __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2,int* positionList,Scorer scorer, int BlockSize_n,int BlockSize_m, int MAXCORES,int* tempMax, int* tempPosition)
 {
+    printf("USO u kernel main\n");
 	int numBlocks;
 	int nums =numBlocks_m+numBlocks_n-1;
+    int *biggestValue = (int*)malloc((int)numBlocks_m*numBlocks_n*sizeof(int));
 	int limit=0;
 	int big = max(numBlocks_m,numBlocks_n);
 	int small = min(numBlocks_m,numBlocks_n);
 	int *positionListTemp;
 	int iter = 0;
-	printf("%d",n);
+	//printf("%d",n);
+    
+    //int *biggestPosition = (int*)malloc((int)numBlocks_m*numBlocks_n*sizeof(int));
 
-    int *biggestValue = (int*)malloc((int)numBlocks_m*numBlocks_n*sizeof(int));
-    int* biggestPosition = (int*)malloc((int)numBlocks_m*numBlocks_n*sizeof(int));
+
 	//positionListTemp = (int*)malloc((int)min(numBlocks_m,numBlocks_n)*sizeof(int));
     printf("nums = %d\n",nums);
 	for(int i=1;i<=nums;i++)
 	{
-        
+
 		positionListTemp = (int*)malloc((int)min(numBlocks_m,numBlocks_n)*sizeof(int));
 		numBlocks=min(numBlocks_m,min(i,numBlocks_n));
 		if(i > big)
@@ -1089,14 +1096,17 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 		}
 		printf("%d\n",numBlocks);
 		printf("Previous:\n");
-		for(int j=0;j<numBlocks;j++) printf("%d ",positionList[j]);
-		printf("\n");
-		threadLevel<<<numBlocks,1024,2*BlockSize_n*BlockSize_m*sizeof(int)>>>(memory, m, n, x1, x2, BlockSize_n,BlockSize_m, scorer,positionList,biggestValue,biggestPosition);
-		cudaDeviceSynchronize();
+		//for(int j=0;j<numBlocks;j++) printf("%d ",positionList[j]);
+		//printf("\n");
+		//threadLevel<<<numBlocks,1024,2*BlockSize_n*BlockSize_m*sizeof(int)>>>(memory, m, n, x1, x2, BlockSize_n,BlockSize_m, scorer,positionList,biggestValue);//,biggestPosition);
+        printf("Izasao iz threda\n");
+		//cudaDeviceSynchronize();
+
         printf("OUT\n");
 		iter = 0;
 		for(int j=0;j<(numBlocks);j++)
 		{
+
 			if(positionList[j]%n==0) //First column
 			{
 				if(!((positionList[j]+BlockSize_n)%n==0)) //if it is first row and first column check if there is next element
@@ -1128,12 +1138,14 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 			}
 			
 		}
-        
-		free(positionList);
+        printf("Prosao ifove\n");
+        //printf("Biggest value = %d\n",biggestValue[0]);
+	    //free(positionList);
 		positionList = positionListTemp;
+        free(positionListTemp);
 		printf("After:\n");
-		for(int j=0;j<iter;j++) printf("%d ",positionList[j]);
-		printf("\n\n");
+		//for(int j=0;j<iter;j++) printf("%d ",positionList[j]);
+		printf("nums: %d\n\n",nums);
 	}
     cudaDeviceSynchronize();
 
@@ -1148,18 +1160,19 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
         if (value >= tempMaxVal)
         {
             tempMaxVal = value;
-            tempMaxPosition = biggestPosition[i];
+            //tempMaxPosition = biggestPosition[i];
         }
     }
     tempMax[0] = tempMaxVal;
-    tempPosition[0] = tempMaxPosition;
+    //tempPosition[0] = tempMaxPosition;
+    free(biggestValue);
 	return;
 }
 
-__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer, int* positionList, int* biggestValue, int* biggestPosition)
+__global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer, int* positionList, int* biggestValue)//, int* biggestPosition)
 {
 	int index = positionList[blockIdx.x];
-    	int chacheindex = threadIdx.x;
+    int chacheindex = threadIdx.x;
 	//printf("%d",index);
 	//extern __shared__ int semaphore[];
 	//semaphore[threadIdx.x]=0;
@@ -1167,13 +1180,10 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 	//semaphore[0]=1;
 	//__syncthreads();
 	int threadNum = BlockSize_n*BlockSize_m;
-	//extern __shared__ int cache[];
-	//int *chacheMemory = cache;
-    printf("%d\n",threadNum);
-	//int *chachePosition = (int*)&chacheMemory[threadNum];
+	extern __shared__ int cache[];
+	int *chacheMemory = cache;
+	int *chachePosition = (int*)&chacheMemory[threadNum];
     
-    __shared__ int chacheMemory[1024];
-    __shared__ int chachePosition[1024];
 	int tempResult = 0;
 	int tempPosition = 0;
 
@@ -1219,6 +1229,7 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 	
 	chacheMemory[chacheindex] = tempResult;
 	chachePosition[chacheindex] = tempPosition;
+
 	__syncthreads();
 
 	int i  = (BlockSize_n*BlockSize_m) / 2 ;
@@ -1235,15 +1246,16 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 		__syncthreads();
 		i/=2 ;
 	}
-
+    
+    //printf("biggestPosition[blockIdx.x] = %d\n",biggestValue[blockIdx.x] );
     if(chacheMemory[0] >= biggestValue[blockIdx.x])
     {
-        	
+        
         biggestValue[blockIdx.x] = chacheMemory[0];
-        printf("chachePosition[0] = %d\n",chachePosition[0]);
-        biggestPosition[blockIdx.x] = chachePosition[0];
+
+        //biggestPosition[blockIdx.x] = chachePosition[0];
         
     }
-
+    __syncthreads();
 	return;
 }
