@@ -876,6 +876,8 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 	int MAXCORES = 512;
 	int numChunks_n = (int)ceil((float)numBlocks_n)/MAXCORES;
 	int numChunks_m = (int)ceil((float)numBlocks_m)/MAXCORES;
+
+    printf("numChunks_n = %d numChunks_m = %d\n",numChunks_n,numChunks_m);
 	int numOfCores_n_last = numBlocks_n%MAXCORES;
 	int numOfCores_m_last = numBlocks_m%MAXCORES;
 	int numOfCores_n = 0;
@@ -967,6 +969,7 @@ arrayM);//inicijalizacija dijela memorije
 		    	//x2[string_n.length()]='\0';
 
 			// zove se funkcija koja preslikava
+            printf("Poziva se kernelMain\n");
 			kernelMain<<<1,1>>>(memory,m,n,numBlocks_m,numBlocks_n,x1,x2,positionList,scorer,BlockSize_n,BlockSize_m, numOfCores, tempMax, tempPosition);
 			cudaDeviceSynchronize();
 			
@@ -1061,10 +1064,8 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 	int iter = 0;
 	printf("%d",n);
 
-	int *biggestValue = (int*)malloc((int)1*sizeof(int));
-	biggestValue[0] = 0;
-	int* biggestPosition = (int*)malloc((int)1*sizeof(int));
-	biggestPosition[0] = 0;
+    int *biggestValue = (int*)malloc((int)numBlocks_m*numBlocks_n*sizeof(int));
+    int* biggestPosition = (int*)malloc((int)numBlocks_m*numBlocks_n*sizeof(int));
 	//positionListTemp = (int*)malloc((int)min(numBlocks_m,numBlocks_n)*sizeof(int));
 	for(int i=1;i<=nums;i++)
 	{
@@ -1122,9 +1123,24 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 		for(int j=0;j<iter;j++) printf("%d, ",positionList[j]);
 		printf("\n\n");
 	}
-    	printf("\n\nBiggest value: %d Position: %d\n",biggestValue[0],biggestPosition[0]);
-	tempMax = biggestValue[0];
-	tempPosition = biggestPosition[0];
+    cudaDeviceSynchronize();
+
+    int N_blocks = numBlocks_m*numBlocks_n;
+
+    int tempMaxVal = 0;
+    int tempMaxPosition = 0;
+    for(int i= 0; i < N_blocks;i++)
+    {
+        int value = biggestValue[i];
+        if (value >= tempMaxVal)
+        {
+            tempMaxVal = value;
+            tempMaxPosition = biggestPosition[i];
+        }
+    }
+    tempMax[0] = tempMaxVal;
+    tempPosition[0] = tempMaxPosition;
+    printf("\n\nBiggest value: %d Position: %d\n",tempMax[0],tempPosition[0]);
 	return;
 }
 
@@ -1204,10 +1220,7 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 		i/=2 ;
 	}
 
-	if (biggestValue[0] <= chacheMemory[0])
-	{
-		biggestValue[0] = chacheMemory[0];
-		biggestPosition[0] = chachePosition[0];
-	}
+    biggestValue[blockIdx.x] = chacheMemory[0];
+    biggestPosition[blockIdx.x] = chachePosition[0];
 	return;
 }
