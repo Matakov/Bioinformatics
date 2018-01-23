@@ -896,14 +896,14 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 	std::string str1_temp,str2_temp;
 	int numOfCores=0;
 	//part of code where memory allocation is happening
-	cudaMallocManaged(&memory, ((BlockSize_n*MAXCORES)*(BlockSize_m*MAXCORES))*sizeof(int));
+	//cudaMallocManaged(&memory, ((BlockSize_n*MAXCORES)*(BlockSize_m*MAXCORES))*sizeof(int));
 	//cudaMallocManaged(&M, N*sizeof(char));
 
     cudaMallocManaged(&tempMax, 1*(sizeof(int)));
     cudaMallocManaged(&tempPosition, 1*(sizeof(int)));
 	for(int i=0;i<numChunks_m;i++)
 	{
-        cudaFree(memory);
+   
 		if (i==numChunks_m-1)
 		{
 			numOfCores=numOfCores_m_last;
@@ -933,9 +933,15 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
                     printf("numOfCores = %d, numOfCores_m = %d, numOfCores_n = %d\n",numOfCores,numOfCores_m,numOfCores_n);
 				}	
 			}
-			else cudaMallocManaged(&memory,((BlockSize_n*MAXCORES)*(BlockSize_m*MAXCORES)*sizeof(int)));			
-		
-            cudaMallocManaged(&memory,((BlockSize_n*numOfCores_n)*(BlockSize_m*numOfCores_m)*sizeof(int)));	
+			else 
+            {
+                cudaMallocManaged(&memory,((BlockSize_n*MAXCORES)*(BlockSize_m*MAXCORES)*sizeof(int)));		
+                numOfCores_n = MAXCORES;
+			    numOfCores_m = MAXCORES;
+		        numOfCores=min(numOfCores_n,numOfCores_m);                
+            }	
+
+            //cudaMallocManaged(&memory,((BlockSize_n*numOfCores_n)*(BlockSize_m*numOfCores_m)*sizeof(int)));	
             printf("Proso uvjete!!\n");
 			// trebalo bi rjesavati problem krajnjih dijelova memorije, kada nisu nuzno kvadratnog oblika
 			// cudaMallocManaged(&memory, ((BlockSize_n*numberOfCores)*(BlockSize_m*numberOfCores)));
@@ -944,19 +950,23 @@ arrayM, MAXCORES);//inicijalizacija dijela memorije
 			printf("INICIJALIZIRO\n");
 			cudaMallocManaged(&positionList, numOfCores*sizeof(int)); // inicijalizacija liste pomoću koje se sinkroniziraju jezgre
 
-			initsemaphor<<<1, numOfCores>>>(positionList, numOfCores);
+			initsemaphor<<<1, numOfCores>>>(positionList, numOfCores);printf("IN: %d\n",numOfCores);
 			cudaDeviceSynchronize();	
-			
+			printf("SEMAFOR\n");
+            printf("numChunks_m = %d, BlockSize_m = %d, numOfCores_m = %d\n",numChunks_m,BlockSize_m,numOfCores_m);
 			if(i==numChunks_m-1)
 			{
+                
 				str1_temp = string_m.substr(i*BlockSize_m*MAXCORES,BlockSize_m*numOfCores_m_last);
 			}
 			else str1_temp = string_m.substr(i*BlockSize_m*MAXCORES,BlockSize_m*numOfCores_m);
 			const char *cstr = str1_temp.c_str();
 			cudaMallocManaged(&x1, str1_temp.length()*(sizeof(char)+1));
-			strcpy(x1, cstr);   
+            //printf("String 1 length = %c\n",str1_temp);    			
+            //std::cout<<str1_temp<<std::endl;
+            strcpy(x1, cstr);   
 			//x1[string_m.length()]='\0';
-			
+			printf("String 1\n");
 			if(j==numChunks_n-1)
 			{
 				str2_temp = string_n.substr(j*BlockSize_n*MAXCORES,BlockSize_n*numOfCores_n_last);
@@ -983,7 +993,7 @@ arrayM, MAXCORES);//inicijalizacija dijela memorije
 			cudaFree(positionList);
 			cudaFree(x1);
 			cudaFree(x2);
-			
+			cudaFree(memory);
 		}		
 	}
 	
@@ -1069,6 +1079,7 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
     printf("nums = %d\n",nums);
 	for(int i=1;i<=nums;i++)
 	{
+        
 		positionListTemp = (int*)malloc((int)min(numBlocks_m,numBlocks_n)*sizeof(int));
 		numBlocks=min(numBlocks_m,min(i,numBlocks_n));
 		if(i > big)
@@ -1080,8 +1091,9 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 		printf("Previous:\n");
 		for(int j=0;j<numBlocks;j++) printf("%d ",positionList[j]);
 		printf("\n");
-		threadLevel<<<MAXCORES,1024,2*BlockSize_n*BlockSize_m*sizeof(int)>>>(memory, m, n, x1, x2, BlockSize_n,BlockSize_m, scorer,positionList,biggestValue,biggestPosition);
+		threadLevel<<<numBlocks,1024,2*BlockSize_n*BlockSize_m*sizeof(int)>>>(memory, m, n, x1, x2, BlockSize_n,BlockSize_m, scorer,positionList,biggestValue,biggestPosition);
 		cudaDeviceSynchronize();
+        printf("OUT\n");
 		iter = 0;
 		for(int j=0;j<(numBlocks);j++)
 		{
@@ -1093,7 +1105,7 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 					iter++;
 				}
 				positionListTemp[iter] = positionList[j] + n*BlockSize_m;
-				iter++;
+				iter++;     
 				//printf("Calculate first column:\n");
 				//printf("%d, %d, %d\n",positionList[j], BlockSize_n, n*BlockSize_m);	
 			}	
@@ -1155,10 +1167,13 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 	//semaphore[0]=1;
 	//__syncthreads();
 	int threadNum = BlockSize_n*BlockSize_m;
-	extern __shared__ int cache[];
-	int *chacheMemory = cache;
-	int *chachePosition = (int*)&chacheMemory[threadNum];
-
+	//extern __shared__ int cache[];
+	//int *chacheMemory = cache;
+    printf("%d\n",threadNum);
+	//int *chachePosition = (int*)&chacheMemory[threadNum];
+    
+    __shared__ int chacheMemory[1024];
+    __shared__ int chachePosition[1024];
 	int tempResult = 0;
 	int tempPosition = 0;
 
@@ -1166,7 +1181,7 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 	for(int i=0;i<BlockSize_n+BlockSize_m-1;i++)
 	{
 		//if((threadIdx.x%n+threadIdx.x/n)==i) memory[threadIdx.x]=i;
-				
+			
 		if((threadIdx.x%BlockSize_n+threadIdx.x/BlockSize_m)==i)
 		{
 			if(!(((index + threadIdx.x%BlockSize_n < n) && threadIdx.x/BlockSize_m==0) || ((index%n==0) && (threadIdx.x%BlockSize_n==0))))
@@ -1194,6 +1209,7 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 		__syncthreads();
 		
 	}
+    
 	//while(semaphore[threadIdx.x]==0){}
 	//memory[threadIdx.x]=threadIdx.x%n+threadIdx.x/n;
 	//printf("%d",threadIdx.x);	
@@ -1219,11 +1235,15 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 		__syncthreads();
 		i/=2 ;
 	}
-    
+
     if(chacheMemory[0] >= biggestValue[blockIdx.x])
     {
+        	
         biggestValue[blockIdx.x] = chacheMemory[0];
+        printf("chachePosition[0] = %d\n",chachePosition[0]);
         biggestPosition[blockIdx.x] = chachePosition[0];
+        
     }
+
 	return;
 }
