@@ -908,6 +908,8 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 	cudaMallocManaged(&memory, ((BlockSize_n*MAXCORES)*(BlockSize_m*MAXCORES))*sizeof(int));
 	//cudaMallocManaged(&M, N*sizeof(char));
 
+    cudaMallocManaged(&tempMax, 1*(sizeof(int)));
+    cudaMallocManaged(&tempPosition, 1*(sizeof(int)));
 	for(int i=0;i<numChunks_m;i++)
 	{
 		if (i==numChunks_m-1)
@@ -974,9 +976,9 @@ arrayM);//inicijalizacija dijela memorije
 			cudaDeviceSynchronize();
 			
 			// spremaju se max vrijednost i pozicija max vrijednosti u trenutnom bloku
-			maxValues[i*numChunks_n+j]=*tempMax;
-			maxPositions[i*numChunks_n+j]=*tempPosition;
-			printf("maxVal: %d, maxPos: %d\n",*tempMax,*tempPosition);
+			maxValues[i*numChunks_n+j]=tempMax[0];
+			maxPositions[i*numChunks_n+j]=tempPosition[0];
+			printf("maxVal: %d, maxPos: %d\n",tempMax[0],tempPosition[0]);
 			//moraju se spremiti vrijednosti sa kojima ce se inicijalizirati matrica
 			saveLastRowCol(memory,i,j,BlockSize_n,BlockSize_m,numOfCores_n,numOfCores_m,arrayN,arrayM);
 			
@@ -984,7 +986,7 @@ arrayM);//inicijalizacija dijela memorije
 			cudaFree(positionList);
 			cudaFree(x1);
 			cudaFree(x2);
-			cudaFree(memory);
+			//cudaFree(memory);
 		}		
 	}
 	
@@ -1126,7 +1128,8 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
     cudaDeviceSynchronize();
 
     int N_blocks = numBlocks_m*numBlocks_n;
-
+    
+    printf("Trazim maxBlock value\n");
     int tempMaxVal = 0;
     int tempMaxPosition = 0;
     for(int i= 0; i < N_blocks;i++)
@@ -1140,7 +1143,6 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
     }
     tempMax[0] = tempMaxVal;
     tempPosition[0] = tempMaxPosition;
-    printf("\n\nBiggest value: %d Position: %d\n",tempMax[0],tempPosition[0]);
 	return;
 }
 
@@ -1219,8 +1221,11 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 		__syncthreads();
 		i/=2 ;
 	}
-
-    biggestValue[blockIdx.x] = chacheMemory[0];
-    biggestPosition[blockIdx.x] = chachePosition[0];
+    
+    if(chacheMemory[0] >= biggestValue[blockIdx.x])
+    {
+        biggestValue[blockIdx.x] = chacheMemory[0];
+        biggestPosition[blockIdx.x] = chachePosition[0];
+    }
 	return;
 }
