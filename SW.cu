@@ -785,32 +785,23 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer,int*positionList,int* biggestValue,int* biggestPosition);
 __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2,int *positionList,Scorer scorer,int BlockSize_n,int BlockSize_m, int MAXCORES,int* tempMax, int* tempPosition);
 void initmemoryHSWchunk(int* memory,int i,int j,int BlockSize_n,int BlockSize_m,int numOfCores_n, int numOfCores_m, int *arrayN,int 
-*arrayM)
+*arrayM, int MAXCORES)
 {
 	for(int k=0;k<BlockSize_m*numOfCores_m;k++)
 	{
 		for(int l=0;l<BlockSize_n*numOfCores_n;l++)
 		{
-			//memory[i*BlockSize_m+j]=;
-
-			if(i==0 && j==0)
-			{
-				memory[k*BlockSize_n*numOfCores_n+l] = 0;
-			}
-			else if(l==0) // prvi stupac
-			{
-				memory[k*BlockSize_n*numOfCores_n] = arrayM[i*BlockSize_m*numOfCores_m+k];
-			}
-			else if(k==0) // prvi redak
-			{
-				memory[k*BlockSize_n*numOfCores_n+l] = arrayN[j*BlockSize_n*numOfCores_n+l];
-			}
-			else
-			{
-				memory[k*BlockSize_n*numOfCores_n+l] = 0;
-			}
+			memory[k*BlockSize_n*numOfCores_n+l] = 0;
 		}
 	}
+    for(int k=0;k<BlockSize_m*numOfCores_m;k++) //inicijalizacija stupca
+    {
+        memory[k*BlockSize_n*numOfCores_n] = arrayM[i*BlockSize_m*numOfCores_m+k];
+    }
+    for(int k=0;k<BlockSize_n*numOfCores_n;k++) //inicijalizacija retka
+    {
+        memory[k] = arrayN[j*BlockSize_n*MAXCORES+k];
+    }
 	return;
 }
 
@@ -912,12 +903,14 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
     cudaMallocManaged(&tempPosition, 1*(sizeof(int)));
 	for(int i=0;i<numChunks_m;i++)
 	{
+        cudaFree(memory);
 		if (i==numChunks_m-1)
 		{
 			numOfCores=numOfCores_m_last;
-			cudaMallocManaged(&memory,((BlockSize_n*MAXCORES)*(BlockSize_m*numOfCores_m_last)));
+			cudaMallocManaged(&memory,((BlockSize_n*MAXCORES)*(BlockSize_m*numOfCores_m_last)*sizeof(int)));
 			numOfCores_m = numOfCores_m_last;
 			numOfCores_n = MAXCORES;
+            printf("numOfCores = %d, numOfCores_m = %d, numOfCores_n = %d\n",numOfCores,numOfCores_m,numOfCores_n);
 		}
 		for(int j=0;j<numChunks_n;j++)
 		{
@@ -927,24 +920,28 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 				{
 					cudaFree(memory);
 					numOfCores=min(numOfCores_n_last,numOfCores_m_last);
-					cudaMallocManaged(&memory,((BlockSize_n*numOfCores_n_last)*(BlockSize_m*numOfCores_m_last)));
+					cudaMallocManaged(&memory,((BlockSize_n*numOfCores_n_last)*(BlockSize_m*numOfCores_m_last)*sizeof(int)));
 					numOfCores_n = numOfCores_n_last;
-					numOfCores_m = numOfCores_m_last;	
+					numOfCores_m = numOfCores_m_last;
+                    printf("numOfCores = %d, numOfCores_m = %d, numOfCores_n = %d\n",numOfCores,numOfCores_m,numOfCores_n);
 				}
 				else{
 					numOfCores=numOfCores_n;
-					cudaMallocManaged(&memory,((BlockSize_n*numOfCores_n_last)*(BlockSize_m*MAXCORES)));
+					cudaMallocManaged(&memory,((BlockSize_n*numOfCores_n_last)*(BlockSize_m*MAXCORES)*sizeof(int)));
 					numOfCores_n = numOfCores_n_last;
 					numOfCores_m = MAXCORES;
+                    printf("numOfCores = %d, numOfCores_m = %d, numOfCores_n = %d\n",numOfCores,numOfCores_m,numOfCores_n);
 				}	
 			}
-			else cudaMallocManaged(&memory,((BlockSize_n*MAXCORES)*(BlockSize_m*MAXCORES)));			
+			else cudaMallocManaged(&memory,((BlockSize_n*MAXCORES)*(BlockSize_m*MAXCORES)*sizeof(int)));			
 		
+            cudaMallocManaged(&memory,((BlockSize_n*numOfCores_n)*(BlockSize_m*numOfCores_m)*sizeof(int)));	
+            printf("Proso uvjete!!\n");
 			// trebalo bi rjesavati problem krajnjih dijelova memorije, kada nisu nuzno kvadratnog oblika
 			// cudaMallocManaged(&memory, ((BlockSize_n*numberOfCores)*(BlockSize_m*numberOfCores)));
 			initmemoryHSWchunk(memory, i, j, BlockSize_n, BlockSize_m, numOfCores_n, numOfCores_m, arrayN, 
-arrayM);//inicijalizacija dijela memorije
-			
+arrayM, MAXCORES);//inicijalizacija dijela memorije
+			printf("INICIJALIZIRO\n");
 			cudaMallocManaged(&positionList, numOfCores*sizeof(int)); // inicijalizacija liste pomoću koje se sinkroniziraju jezgre
 
 			initsemaphor<<<1, numOfCores>>>(positionList, numOfCores);
@@ -986,7 +983,7 @@ arrayM);//inicijalizacija dijela memorije
 			cudaFree(positionList);
 			cudaFree(x1);
 			cudaFree(x2);
-			//cudaFree(memory);
+			
 		}		
 	}
 	
@@ -1040,9 +1037,9 @@ arrayM);//inicijalizacija dijela memorije
 	{
 		for(int j=0;j<n;j++)
 		{
-			std::cout<<std::setw(2)<<memory[i*n+j]<<" ";
+			//std::cout<<std::setw(2)<<memory[i*n+j]<<" ";
 		}
-		std::cout<<std::endl;
+		//std::cout<<std::endl;
 	}
 	
 	/*
@@ -1069,6 +1066,7 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
     int *biggestValue = (int*)malloc((int)numBlocks_m*numBlocks_n*sizeof(int));
     int* biggestPosition = (int*)malloc((int)numBlocks_m*numBlocks_n*sizeof(int));
 	//positionListTemp = (int*)malloc((int)min(numBlocks_m,numBlocks_n)*sizeof(int));
+    printf("nums = %d\n",nums);
 	for(int i=1;i<=nums;i++)
 	{
 		positionListTemp = (int*)malloc((int)min(numBlocks_m,numBlocks_n)*sizeof(int));
@@ -1085,7 +1083,7 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 		threadLevel<<<MAXCORES,1024,2*BlockSize_n*BlockSize_m*sizeof(int)>>>(memory, m, n, x1, x2, BlockSize_n,BlockSize_m, scorer,positionList,biggestValue,biggestPosition);
 		cudaDeviceSynchronize();
 		iter = 0;
-		for(int j=0;j<numBlocks;j++)
+		for(int j=0;j<(numBlocks);j++)
 		{
 			if(positionList[j]%n==0) //First column
 			{
@@ -1098,13 +1096,13 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 				iter++;
 				//printf("Calculate first column:\n");
 				//printf("%d, %d, %d\n",positionList[j], BlockSize_n, n*BlockSize_m);	
-			}		
+			}	
 			else if((positionList[j]+BlockSize_n)%n==0) //Last column
 			{
 				//iter--;
 				continue;
 			}
-			else if((positionList[j]+n*BlockSize_m)>=BlockSize_n*BlockSize_m) //Last row
+			else if((positionList[j]+n*BlockSize_m)>=(m-1)*n) //Last row
 			{
 				//iter--;
 				continue;
@@ -1122,7 +1120,7 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 		free(positionList);
 		positionList = positionListTemp;
 		printf("After:\n");
-		for(int j=0;j<iter;j++) printf("%d, ",positionList[j]);
+		for(int j=0;j<iter;j++) printf("%d ",positionList[j]);
 		printf("\n\n");
 	}
     cudaDeviceSynchronize();
