@@ -874,8 +874,8 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 	char* x2 ;// = allocateMemory(string_n);
 	///////////////////////////////////////////////////////////////////////////////
 	int MAXCORES = 512;
-	int numChunks_n = (int)ceil((float)numBlocks_n)/MAXCORES;
-	int numChunks_m = (int)ceil((float)numBlocks_m)/MAXCORES;
+	int numChunks_n = (int)ceil((float)numBlocks_n/(float)MAXCORES);
+	int numChunks_m = (int)ceil((float)numBlocks_m/(float)MAXCORES);
 
     printf("numChunks_n = %d numChunks_m = %d\n",numChunks_n,numChunks_m);
 	int numOfCores_n_last = numBlocks_n%MAXCORES;
