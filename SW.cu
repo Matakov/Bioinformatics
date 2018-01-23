@@ -1072,7 +1072,7 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
     	//printf("USO u kernel main\n");
 	int numBlocks;
 	int nums =numBlocks_m+numBlocks_n-1;
-    	int *biggestValue = (int*)malloc((int)numBlocks_m*numBlocks_n*sizeof(int));
+    int *biggestValue = (int*)malloc((int)numBlocks_m*numBlocks_n*sizeof(int));
 	int limit=0;
 	int big = max(numBlocks_m,numBlocks_n);
 	int small = min(numBlocks_m,numBlocks_n);
@@ -1099,9 +1099,9 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 		//printf("Previous:\n");
 		//for(int j=0;j<numBlocks;j++) printf("%d ",positionList[j]);
 		//printf("\n");
-		//threadLevel<<<numBlocks,1024,2*BlockSize_n*BlockSize_m*sizeof(int)>>>(memory, m, n, x1, x2, BlockSize_n,BlockSize_m, scorer,positionList,biggestValue);//,biggestPosition);
+		threadLevel<<<numBlocks,1024,2*BlockSize_n*BlockSize_m*sizeof(int)>>>(memory, m, n, x1, x2, BlockSize_n,BlockSize_m, scorer,positionList,biggestValue);//,biggestPosition);
         	//printf("Izasao iz threda\n");
-		//cudaDeviceSynchronize();
+		cudaDeviceSynchronize();
 
         	//printf("OUT\n");
 		iter = 0;
@@ -1143,12 +1143,12 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
         	//printf("Biggest value = %d\n",biggestValue[0]);
 	    	//free(positionList);
 		positionList = positionListTemp;
-        	free(positionListTemp);
+        free(positionListTemp);
 		//printf("After:\n");
 		//for(int j=0;j<iter;j++) printf("%d ",positionList[j]);
 		//printf("nums: %d\n\n",nums);
 	}
-    	cudaDeviceSynchronize();
+    cudaDeviceSynchronize();
 	int N_blocks = numBlocks_m*numBlocks_n;
     
 	printf("Trazim maxBlock value\n");
@@ -1161,11 +1161,13 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 		{
 			tempMaxVal = value;
             		//tempMaxPosition = biggestPosition[i];
-        	}
-    	}
-    	tempMax[0] = tempMaxVal;
-    	//tempPosition[0] = tempMaxPosition;
-    	free(biggestValue);
+        }
+    }
+    tempMax[0] = tempMaxVal;
+    cudaDeviceSynchronize();
+    //tempPosition[0] = tempMaxPosition;
+    free(biggestValue);
+
 	return;
 }
 
@@ -1239,23 +1241,24 @@ __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int B
 		if ( chacheindex < i )
 		{
 		    if (chacheMemory[chacheindex] <= chacheMemory[chacheindex + i])
-		
-			chacheMemory[chacheindex] = chacheMemory[chacheindex + i];
-			chachePosition[chacheindex] = chachePosition[chacheindex + i];
+		    {
+			    chacheMemory[chacheindex] = chacheMemory[chacheindex + i];
+			    chachePosition[chacheindex] = chachePosition[chacheindex + i];
+            }
 		}
 		__syncthreads();
 		i/=2 ;
 	}
     
-    	//printf("biggestPosition[blockIdx.x] = %d\n",biggestValue[blockIdx.x] );
-    	if(chacheMemory[0] >= biggestValue[blockIdx.x])
-    	{
+
+    if(chacheMemory[0] >= biggestValue[blockIdx.x])
+    {
         
-        	biggestValue[blockIdx.x] = chacheMemory[0];
+        biggestValue[blockIdx.x] = chacheMemory[0];
 
         //biggestPosition[blockIdx.x] = chachePosition[0];
         
-    	}
-    	__syncthreads();
+    }
+    __syncthreads();
 	return;
 }
