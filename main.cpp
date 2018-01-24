@@ -34,8 +34,8 @@ int main(int argc, const char** argv)
     std::string s1 = getSequence(s1_name);
     std::string s2 = getSequence(s2_name);
     
-    std::cout<<s1<<std::endl;
-    std::cout<<s2<<std::endl;
+    //std::cout<<s1<<std::endl;
+    //std::cout<<s2<<std::endl;
     
     //std::string s1 = "ATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATGGGGGGCCCCCGGGGGGGGGGGGGGGGGATATATATATATATATATATGGGGGGCCCCCGGGGGGGGGGGGGGGGGATATATATATATATATATATGGGGGGCCCCCGGGGGGGGGGGGGGGGG";
     //std::string s2 = "ATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATAT";
