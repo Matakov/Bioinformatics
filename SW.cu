@@ -782,8 +782,30 @@ void SmithWatermanGPU(std::string const& s1, std::string const& s2, double const
 	return;
 }
 
+
+//CORRECT PROGRAM
+//--------------------------------------------------------------------------------------------------------------------------
+
+
 __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer,int*positionList,int* biggestValue,int* biggestPosition);
 __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2,int *positionList,Scorer scorer,int BlockSize_n,int BlockSize_m, int MAXCORES,int* tempMax, int* tempPosition);
+
+/*
+Authors: Franjo Matkovic, Dario Sitnik, Matej Crnac
+
+Parameters:
+    input:  
+            memory  - reference to memory
+            i       - chunk row
+            j       -chunk column
+            BLockSize_n - size of block
+            BLockSize_m - size of block
+            numOfCores_n - number of kernels on x axis
+            numOfCores_m - number of kernels on y axis
+            arrayN      - pointer to initialisation vector on x axis
+            arrayM      - pointer to initialisation vector on y axis
+            MAXCORES    - max number of cores to use
+*/
 void initmemoryHSWchunk(int* memory,int i,int j,int BlockSize_n,int BlockSize_m,int numOfCores_n, int numOfCores_m, int *arrayN,int 
 *arrayM, int MAXCORES)
 {
@@ -805,6 +827,22 @@ void initmemoryHSWchunk(int* memory,int i,int j,int BlockSize_n,int BlockSize_m,
 	return;
 }
 
+/*
+Authors: Franjo Matkovic, Dario Sitnik, Matej Crnac
+
+Parameters:
+    input:  
+            memory  - reference to memory
+            i       - chunk row
+            j       -chunk column
+            BLockSize_n - size of block
+            BLockSize_m - size of block
+            numOfCores_n - number of kernels on x axis
+            numOfCores_m - number of kernels on y axis
+            arrayN      - pointer to initialisation vector on x axis
+            arrayM      - pointer to initialisation vector on y axis
+    Method saves last row and last column in a chunk
+*/
 void saveLastRowCol(int* memory,int i,int j,int BlockSize_n,int BlockSize_m,int numOfCores_n, int numOfCores_m,int* arrayN,int* arrayM)
 {
 	for(int k=0;k<BlockSize_m*numOfCores_m;k++)
@@ -825,6 +863,17 @@ void saveLastRowCol(int* memory,int i,int j,int BlockSize_n,int BlockSize_m,int 
 
 }
 
+/*
+Authors: Franjo Matkovic, Dario Sitnik, Matej Crnac
+
+Parameters:
+    input:  
+            s1  - first string
+            s2  - second string
+            scorer - scorer object used to correctly score match and mismatch
+    Main method. It prepares everithing for calculation. Does padding, calcualtes number of blocks to use, number of chunks 
+    and iterates through chunks and calls MainKernel.
+*/
 void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scorer)
 {    
     float elapsed=0;
@@ -996,6 +1045,7 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
     std::vector<std::tuple<char,char,char>> alig = pathReconstruction(memory,maxPosition,n,s1,s2);
     printAlignment(alig);
 
+    //Stop time
     cudaEventRecord(stop, 0);
     cudaEventSynchronize (stop) ;
     cudaEventElapsedTime(&elapsed, start, stop) ;
@@ -1004,7 +1054,7 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 
     std::cout<<"time: "<< elapsed <<std::endl;
 
-        // show memory usage of GPU
+    // show memory usage of GPU
     size_t free_byte ;
     size_t total_byte ;
     cudaError_t cuda_status = cudaMemGetInfo( &free_byte, &total_byte ) ;
@@ -1017,6 +1067,8 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
     double total_db = (double)total_byte ;
     double used_db = total_db - free_db ;
     printf("GPU memory usage: used = %f, free = %f MB, total = %f MB\n",used_db/1024.0/1024.0, free_db/1024.0/1024.0, total_db/1024.0/1024.0);
+
+
 
 	//Ispis memorije
 	/*for(int i=0;i<m;i++)
@@ -1031,6 +1083,27 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 
 	return;
 }
+
+/*
+Authors: Franjo Matkovic, Dario Sitnik, Matej Crnac
+
+Parameters:
+    input:  
+            memory  - reference to memory
+            m       - size of string 1
+            n       - size of string 2
+            numBlocks_m - number of blocks on y axis
+            numBlocks_n - number of blocks on x axis
+            x1 - string 1
+            x2 - string 2
+            positionList      - pointer to positionsList
+            scorer      - scored object used to score match and mismatch
+            BlockSize_n     -size of block
+            BlockSize_m     -size of block
+            MAXCORES        -max number of cores to use
+            tempMax         -pointer to maxValue found
+            tempPosition    -pointer to position of maxValue found
+*/
 
 __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks_n,char *x1,char *x2,int* positionList,Scorer scorer, int BlockSize_n,int BlockSize_m, int MAXCORES,int* tempMax, int* tempPosition)
 {
@@ -1113,6 +1186,24 @@ __global__ void kernelMain(int* memory,int m,int n,int numBlocks_m,int numBlocks
 	return;
 }
 
+/*
+Authors: Franjo Matkovic, Dario Sitnik, Matej Crnac
+
+Parameters:
+    input:  
+            memory  - reference to memory
+            m       - size of string 1
+            n       -size of string 2
+            x1 - string 1
+            x2 - string 2
+            BlockSize_n     -size of block
+            BlockSize_m     -size of block
+            scorer      - scored object used to score match and mismatch
+            positionList      - pointer to positionsList
+
+            biggestValue         -pointer to maxValue found
+            biggestPosition    -pointer to position of maxValue found
+*/
 __global__ void threadLevel(int* memory, int m, int n, char *x1, char *x2, int BlockSize_n,int BlockSize_m, Scorer scorer, int* positionList, int* biggestValue,int* biggestPosition)
 {
 	int index = positionList[blockIdx.x];
