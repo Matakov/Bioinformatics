@@ -14,7 +14,7 @@ int main(int argc, const char** argv)
     mm = -3;
     d = 2;
     e = 2;
-
+    
     std::string s1_name;
     std::string s2_name;
 
@@ -34,11 +34,16 @@ int main(int argc, const char** argv)
     std::string s1 = getSequence(s1_name);
     std::string s2 = getSequence(s2_name);
     
-    std::cout<<s1<<std::endl;
-    std::cout<<s2<<std::endl;
-
+    //std::cout<<s1<<std::endl;
+    //std::cout<<s2<<std::endl;
+    
+    //std::string s1 = "ATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATGGGGGGCCCCCGGGGGGGGGGGGGGGGGATATATATATATATATATATGGGGGGCCCCCGGGGGGGGGGGGGGGGGATATATATATATATATATATGGGGGGCCCCCGGGGGGGGGGGGGGGGG";
+    //std::string s2 = "ATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATAT";
+    //std::string s1 = "ATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATATAT";
+    //std::string s2 = "ATATATATATATATATATATATATATATATAGGGGGGGGGGGGGGGGGGGGGGGGG";
     Scorer scorer = setScorer(m,mm,d,e);
-    SmithWatermanGPU(s1,s2,b,scorer);   
+    //SmithWatermanGPU(s1,s2,b,scorer);   
+    SmithWatermanPrep(s1,s2,scorer);
 
     return 0;
     
