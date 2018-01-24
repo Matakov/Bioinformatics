@@ -895,6 +895,8 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 
 	int maxValues[numChunks_n*numChunks_m];
 	int maxPositions[numChunks_n*numChunks_m];
+    int maxPosition = 0;
+    int maxValue = 0;
 	int *tempMax;
 	int *tempPosition;
 	std::string str1_temp,str2_temp;
@@ -969,6 +971,11 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 			// spremaju se max vrijednost i pozicija max vrijednosti u trenutnom bloku
 			maxValues[i*numChunks_n+j]=tempMax[0];
 			maxPositions[i*numChunks_n+j]=tempPosition[0];
+            if (tempMax[0] >= maxValue)
+            {
+                maxValue = tempMax[0];
+                maxPosition = tempPosition[0];
+            }
             int maxRowPosition = tempPosition[0]/n;
             int maxColumnPosition = tempPosition[0]%n;
 			printf("maxVal: %d, maxPos: %d, Row: = %d, Column = %d\n",tempMax[0],tempPosition[0],maxRowPosition,maxColumnPosition);
@@ -979,13 +986,15 @@ void SmithWatermanPrep(std::string const& s1, std::string const& s2, Scorer scor
 			cudaFree(positionList);
 			cudaFree(x1);
 			cudaFree(x2);
-			cudaFree(memory);
+			//cudaFree(memory);
 		}		
 	}
 	
     cudaFree(tempMax);
     cudaFree(tempPosition);
 
+    std::vector<std::tuple<char,char,char>> alig = pathReconstruction(memory,maxPosition,n,s1,s2);
+    printAlignment(alig);
 
     cudaEventRecord(stop, 0);
     cudaEventSynchronize (stop) ;
