@@ -12,7 +12,7 @@ Team members: Dario Sitnik, Franjo Matković. Matej Crnac
 Program is compiled with:
     nvcc -arch=sm_35 -rdc=true main.cpp utility.cpp SW.cu -std=c++11 -o program
 Program is run with:
-	./program file1.txt, file2.txt
+	./program data_examples/synthData1_str1.txt data_examples/synthData1_str2.txt
 or
 	./program file1.fasta file2.fasta
 
